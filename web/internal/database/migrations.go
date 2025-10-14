@@ -74,18 +74,19 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	// Check if headers column exists in scans table
+	var headersCount int
 	err = db.QueryRow(`
 		SELECT COUNT(*) 
 		FROM pragma_table_info('scans') 
 		WHERE name = 'headers'
-	`).Scan(&count)
+	`).Scan(&headersCount)
 	
 	if err != nil {
 		return fmt.Errorf("failed to check scans table schema: %v", err)
 	}
 
 	// If headers column doesn't exist, add it
-	if count == 0 {
+	if headersCount == 0 {
 		log.Println("📝 Adding headers column to scans table...")
 		
 		// Add the headers column
