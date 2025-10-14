@@ -3,6 +3,7 @@ class HiddenTraceApp {
     constructor() {
         this.apiBase = '/api';
         this.token = localStorage.getItem('HiddenTrace_token'); // Get JWT token
+        this.isRedirecting = false; // Prevent multiple redirects
         this.init();
     }
 
@@ -79,11 +80,17 @@ class HiddenTraceApp {
                 this.user = data.user;
                 this.updateUI();
             } else {
-                this.logout();
+                // Don't call logout here to prevent redirect loops
+                // Just clear the user state
+                this.user = null;
+                this.updateUI();
             }
         } catch (error) {
             console.error('Auth check failed:', error);
-            this.logout();
+            // Don't call logout here to prevent redirect loops
+            // Just clear the user state
+            this.user = null;
+            this.updateUI();
         }
     }
 
@@ -210,6 +217,15 @@ class HiddenTraceApp {
             this.updateUI();
             this.showToast('Logged out successfully', 'info');
         });
+        
+        // Only redirect if not already redirecting
+        if (!this.isRedirecting) {
+            this.isRedirecting = true;
+            // Small delay to allow toast to show
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
     }
 
     // Scan Methods

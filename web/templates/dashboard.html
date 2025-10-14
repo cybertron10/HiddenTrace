@@ -283,16 +283,24 @@
                 this.activeScans = new Set(); // Track scans that are currently running
                 this.pollingInterval = null;
                 this.token = localStorage.getItem('HiddenTrace_token'); // Get JWT token
+                this.isRedirecting = false; // Prevent multiple redirects
                 this.init();
             }
 
-            init() {
-
+            async init() {
                 this.setupEventListeners();
-                this.loadUserInfo();
-                this.loadDashboardData();
-                this.loadScans();
-                this.startPolling();
+                
+                // Check authentication first before loading data
+                try {
+                    await this.loadUserInfo();
+                    // Only load other data if authentication is successful
+                    this.loadDashboardData();
+                    this.loadScans();
+                    this.startPolling();
+                } catch (error) {
+                    console.error('Authentication failed:', error);
+                    // Authentication will be handled by the API call method
+                }
             }
 
             setupEventListeners() {
@@ -381,10 +389,12 @@
                         this.updateUserInfo();
                         this.checkAdminAccess();
                     } else {
-                        console.error('Failed to load user info');
+                        console.error('Failed to load user info - status:', response.status);
+                        // Don't throw here, let the API call method handle the redirect
                     }
                 } catch (error) {
                     console.error('Error loading user info:', error);
+                    // Don't throw here, let the API call method handle the redirect
                 }
             }
 
@@ -862,8 +872,14 @@
                 // Handle authentication errors globally - redirect immediately
                 if (response.status === 401) {
                     console.log('Session expired, redirecting to login');
-                    // Redirect immediately without delay
-                    window.location.href = '/';
+                    // Prevent multiple redirects
+                    if (!this.isRedirecting) {
+                        this.isRedirecting = true;
+                        // Clear any stored tokens
+                        localStorage.removeItem('HiddenTrace_token');
+                        // Redirect immediately without delay
+                        window.location.href = '/';
+                    }
                     return response;
                 }
                 
