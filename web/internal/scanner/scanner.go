@@ -1,4 +1,4 @@
-package scanner
+﻿package scanner
 
 import (
 	"bufio"
@@ -681,6 +681,15 @@ func (s *Service) RunParameterFuzzing(scanUUID string, userID int, chunkSize int
 	
 	// Wait for all fuzzing to complete or be cancelled
 	wg.Wait()
+	
+	// Create allurls.txt file for Axiom integration
+	allURLsFile := filepath.Join(scanDir, "allurls.txt")
+	err = s.createAllURLsFile(results, allURLsFile)
+	if err != nil {
+		log.Printf("Error creating allurls.txt file: %v", err)
+	} else {
+		log.Printf("Created allurls.txt file with all discovered URLs")
+	}
 	
 	log.Printf("Parameter fuzzing completed for scan %s", scanUUID)
 }
@@ -2888,3 +2897,31 @@ func (s *Service) GetScanResultsByUUID(scanUUID string, userID int) ([]database.
 
 	return results, nil
 }
+
+
+// createAllURLsFile creates a combined allurls.txt file with all discovered URLs for Axiom integration
+func (s *Service) createAllURLsFile(results []database.ScanResult, filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	
+	// Use a map to track unique URLs
+	uniqueURLs := make(map[string]bool)
+	
+	// Collect all unique URLs from scan results
+	for _, result := range results {
+		if result.URL != "" && !uniqueURLs[result.URL] {
+			uniqueURLs[result.URL] = true
+			_, err = file.WriteString(result.URL + "\n")
+			if err != nil {
+				return err
+			}
+		}
+	}
+	
+	log.Printf("Created allurls.txt with %d unique URLs", len(uniqueURLs))
+	return nil
+}
+
