@@ -10,50 +10,67 @@ import (
 func RunMigrations(db *sql.DB) error {
 	log.Println("🔄 Running database migrations...")
 
-	// Check if last_used column exists in sessions table
-	var count int
+	// Check if sessions table exists first
+	var tableExists int
 	err := db.QueryRow(`
 		SELECT COUNT(*) 
-		FROM pragma_table_info('sessions') 
-		WHERE name = 'last_used'
-	`).Scan(&count)
+		FROM sqlite_master 
+		WHERE type='table' AND name='sessions'
+	`).Scan(&tableExists)
 	
 	if err != nil {
-		return fmt.Errorf("failed to check sessions table schema: %v", err)
+		return fmt.Errorf("failed to check if sessions table exists: %v", err)
 	}
 
-	// If last_used column doesn't exist, add it
-	if count == 0 {
-		log.Println("📝 Adding last_used column to sessions table...")
+	// Only run sessions table migrations if the table exists
+	if tableExists > 0 {
+		// Check if last_used column exists in sessions table
+		var count int
+		err = db.QueryRow(`
+			SELECT COUNT(*) 
+			FROM pragma_table_info('sessions') 
+			WHERE name = 'last_used'
+		`).Scan(&count)
 		
-		// Add the last_used column without default (SQLite limitation)
-		_, err = db.Exec(`
-			ALTER TABLE sessions 
-			ADD COLUMN last_used DATETIME
-		`)
 		if err != nil {
-			return fmt.Errorf("failed to add last_used column: %v", err)
+			return fmt.Errorf("failed to check sessions table schema: %v", err)
 		}
 
-		// Update existing sessions to have last_used = created_at
-		_, err = db.Exec(`
-			UPDATE sessions 
-			SET last_used = created_at 
-			WHERE last_used IS NULL
-		`)
-		if err != nil {
-			return fmt.Errorf("failed to update existing sessions: %v", err)
+		// If last_used column doesn't exist, add it
+		if count == 0 {
+			log.Println("📝 Adding last_used column to sessions table...")
+			
+			// Add the last_used column without default (SQLite limitation)
+			_, err = db.Exec(`
+				ALTER TABLE sessions 
+				ADD COLUMN last_used DATETIME
+			`)
+			if err != nil {
+				return fmt.Errorf("failed to add last_used column: %v", err)
+			}
+
+			// Update existing sessions to have last_used = created_at
+			_, err = db.Exec(`
+				UPDATE sessions 
+				SET last_used = created_at 
+				WHERE last_used IS NULL
+			`)
+			if err != nil {
+				return fmt.Errorf("failed to update existing sessions: %v", err)
+			}
+
+			log.Println("✅ Successfully added last_used column to sessions table")
+		} else {
+			log.Println("✅ last_used column already exists in sessions table")
 		}
 
-		log.Println("✅ Successfully added last_used column to sessions table")
+		// Create index for last_used if it doesn't exist
+		_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_sessions_last_used ON sessions(last_used)")
+		if err != nil {
+			return fmt.Errorf("failed to create sessions last_used index: %v", err)
+		}
 	} else {
-		log.Println("✅ last_used column already exists in sessions table")
-	}
-
-	// Create index for last_used if it doesn't exist
-	_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_sessions_last_used ON sessions(last_used)")
-	if err != nil {
-		return fmt.Errorf("failed to create sessions last_used index: %v", err)
+		log.Println("ℹ️  Sessions table doesn't exist yet, skipping sessions migrations")
 	}
 
 	// Check if headers column exists in scans table
