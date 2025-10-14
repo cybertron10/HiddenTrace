@@ -309,6 +309,16 @@ func (s *Service) saveScanFiles(scanID int, scanUUID string, scanDir string, sca
 		// Don't fail the scan for brutewordlist errors
 	}
 
+	// Create allurls.txt file for Axiom integration
+	allURLsFile := filepath.Join(scanDir, "allurls.txt")
+	err = s.createAllURLsFileFromScanData(scanData, allURLsFile)
+	if err != nil {
+		log.Printf("Error creating allurls.txt file: %v", err)
+		// Don't fail the scan for allurls.txt errors
+	} else {
+		log.Printf("Created allurls.txt file with all discovered URLs")
+	}
+
 	// Record files in database
 	files := []struct {
 		fileType string
@@ -318,6 +328,7 @@ func (s *Service) saveScanFiles(scanID int, scanUUID string, scanDir string, sca
 		{"txt", xssFile},
 		{"params", paramsFile},
 		{"brutewordlist", brutewordlistFile},
+		{"allurls", allURLsFile},
 	}
 
 	for _, file := range files {
@@ -2922,6 +2933,54 @@ func (s *Service) createAllURLsFile(results []database.ScanResult, filename stri
 	}
 	
 	log.Printf("Created allurls.txt with %d unique URLs", len(uniqueURLs))
+	return nil
+}
+
+// createAllURLsFileFromScanData creates a combined allurls.txt file from ScanningData for Axiom integration
+func (s *Service) createAllURLsFileFromScanData(scanData *scanningData.ScanningData, filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	
+	// Use a map to track unique URLs
+	uniqueURLs := make(map[string]bool)
+	
+	// Collect all unique URLs from GET endpoints
+	for _, endpoint := range scanData.GETEndpoints {
+		if endpoint.URL != "" && !uniqueURLs[endpoint.URL] {
+			uniqueURLs[endpoint.URL] = true
+			_, err = file.WriteString(endpoint.URL + "\n")
+			if err != nil {
+				return err
+			}
+		}
+	}
+	
+	// Collect all unique URLs from POST endpoints
+	for _, endpoint := range scanData.POSTEndpoints {
+		if endpoint.URL != "" && !uniqueURLs[endpoint.URL] {
+			uniqueURLs[endpoint.URL] = true
+			_, err = file.WriteString(endpoint.URL + "\n")
+			if err != nil {
+				return err
+			}
+		}
+	}
+	
+	// Collect all unique URLs from JavaScript endpoints
+	for _, endpoint := range scanData.JSEndpoints {
+		if endpoint.URL != "" && !uniqueURLs[endpoint.URL] {
+			uniqueURLs[endpoint.URL] = true
+			_, err = file.WriteString(endpoint.URL + "\n")
+			if err != nil {
+				return err
+			}
+		}
+	}
+	
+	log.Printf("Created allurls.txt with %d unique URLs from scan data", len(uniqueURLs))
 	return nil
 }
 
