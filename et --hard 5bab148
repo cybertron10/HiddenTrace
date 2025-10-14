@@ -1,0 +1,10 @@
+[33m4639862[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Complete frontend redesign: Professional security scanner theme with dark cyber aesthetic, glass effects, neon glows, and modern animations
+[33mc5a66ce[m Fix: View All Scans button now opens modal with complete scans table including completion dates
+[33m2ac0215[m UI: Professional dashboard redesign - clean table layout, endpoint stats, quick actions sidebar, modern cards with borders
+[33md1a9f6c[m Routing/UI: root redirects to login or dashboard; add /login and /admin routes; hide admin panel on /dashboard; topbar links: Admin -> /admin, Web Discovery -> latest scan results
+[33maf6afb6[m UI: Add topbar menus (Web Discovery, Admin Panel for admins, Vulnerabilities placeholder); smooth scroll; cleaner layout
+[33m5bab148[m Wire chunk_size through all fuzzing helpers (GET/POST, with/without context) and callers; fix build
+[33m8341cfa[m UI/Backend: add chunk_size setting (default 500) for parameter fuzzing; wire through API and scanner; add input on Scan Results page
+[33m37d6239[m Params fuzzing: test all params in one chunk to catch coupled params; neutralize non-target params with empty values during reflection confirmation
+[33m208bc73[m Tokens: switch to alphanumeric-only param-scoped tokens (no underscores) across paramsmapper and scanner
+[33mc4f73cd[m Reflection detection: include original headers and derive them from scan dir; update parser to pass headers so Reflected Parameters populate

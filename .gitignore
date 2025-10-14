@@ -1,0 +1,106 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vidusec
+vidusec-web
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Data directory (contains scan results and user data)
+data/
+web/data/
+
+# Log files
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+*.zip
+
+# Node modules (if any frontend build tools are used)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated files
+*.generated.go
+*.pb.go
+
+# Coverage reports
+coverage.out
+coverage.html
+
+# Air live reload (if used)
+tmp/
+
+# Local configuration
+config.local.yaml
+config.local.yml
+config.local.json
+
+# Scan output files (these are generated)
+*.txt
+*.json
+!package.json
+!go.mod
+!go.sum
+!README.md
+!*.md
+
+# Custom wordlists and headers (these might contain sensitive data)
+customwordlist.txt
+headers.txt
+xss_endpoints.txt
+scanning_data.json
+
+# Web application specific
+web/static/dist/
+web/templates/cache/

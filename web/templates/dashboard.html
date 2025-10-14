@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HiddenTrace Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style nonce="{{.nonce}}">
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="/dashboard" class="text-white text-xl font-bold hover:text-gray-200 transition-colors">
+                            <i class="fas fa-shield-alt mr-2"></i>HiddenTrace
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userInfo" class="text-white"></span>
+                    <button id="newScanBtn" class="bg-white text-purple-600 hover:bg-gray-100 px-4 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-plus mr-1"></i>New Scan
+                    </button>
+                    <button id="logoutBtn" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-search text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Scans</p>
+                        <p id="totalScans" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Completed</p>
+                        <p id="completedScans" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-spinner text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Running</p>
+                        <p id="runningScans" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="bg-white rounded-lg shadow-lg mb-8 hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-crown mr-2 text-yellow-500"></i>Admin Panel
+                </h2>
+            </div>
+            <div class="p-6">
+                <!-- Admin Tabs -->
+                <div class="mb-6">
+                    <nav class="flex space-x-8">
+                        <button id="adminUsersTab" class="admin-tab active py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                            <i class="fas fa-users mr-2"></i>Users Management
+                        </button>
+                        <button id="adminSystemTab" class="admin-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-cog mr-2"></i>System Operations
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Users Management Tab -->
+                <div id="adminUsersContent" class="admin-content">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">All Users</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div id="usersList" class="space-y-4">
+                                <!-- Users will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Operations Tab -->
+                <div id="adminSystemContent" class="admin-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <!-- Delete All User Scans -->
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-trash-alt text-red-600 mr-2"></i>
+                                <h3 class="text-sm font-medium text-red-800">Delete All My Scans</h3>
+                            </div>
+                            <p class="text-xs text-red-600 mb-3">Delete all scans for your account</p>
+                            <button id="deleteAllUserScansBtn" class="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Delete All My Scans
+                            </button>
+                        </div>
+
+                        <!-- Cleanup Old Scans -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-broom text-yellow-600 mr-2"></i>
+                                <h3 class="text-sm font-medium text-yellow-800">Cleanup Old Scans</h3>
+                            </div>
+                            <p class="text-xs text-yellow-600 mb-3">Remove old numeric scan directories</p>
+                            <button id="cleanupOldScansBtn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-broom mr-1"></i>Cleanup Old Scans
+                            </button>
+                        </div>
+
+                        <!-- Cleanup Orphaned Files -->
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-folder-open text-orange-600 mr-2"></i>
+                                <h3 class="text-sm font-medium text-orange-800">Cleanup Orphaned Files</h3>
+                            </div>
+                            <p class="text-xs text-orange-600 mb-3">Remove scan directories without database entries</p>
+                            <button id="cleanupOrphanedFilesBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-folder-open mr-1"></i>Cleanup Orphaned Files
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Admin Only Section -->
+                    <div class="bg-red-100 border border-red-300 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                            <h3 class="text-sm font-medium text-red-800">Dangerous Operations</h3>
+                        </div>
+                        <p class="text-xs text-red-600 mb-3">These operations affect ALL users and cannot be undone!</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button id="deleteAllScansBtn" class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-skull mr-1"></i>Delete ALL Scans (All Users)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Scans -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Scans</h2>
+                    <div id="pollingIndicator" class="hidden flex items-center text-sm text-gray-500">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        <span>Updating...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="scansList" class="space-y-4">
+                    <!-- Scans will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scan Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div id="modalBackdrop" class="flex items-center justify-center min-h-screen p-4">
+            <div id="modalContent" class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6 max-h-screen overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Scan Results</h2>
+                    <button id="closeResultsModal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="scanDetails" class="mb-6">
+                    <!-- Scan details will be loaded here -->
+                </div>
+                
+                <div id="resultsContent">
+                    <!-- Results will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Scan Modal -->
+    <div id="newScanModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">New Scan</h2>
+                    <button id="closeNewScanModal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="newScanForm">
+                    <div class="mb-4">
+                        <label for="newScanTargetUrl" class="block text-sm font-medium text-gray-700 mb-2">
+                            Target URL
+                        </label>
+                        <input id="newScanTargetUrl" type="url" required placeholder="https://example.com"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="newScanMaxDepth" class="block text-sm font-medium text-gray-700 mb-2">
+                                Max Depth
+                            </label>
+                            <input id="newScanMaxDepth" type="number" min="1" max="20" value="10"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label for="newScanMaxPages" class="block text-sm font-medium text-gray-700 mb-2">
+                                Max Pages
+                            </label>
+                            <input id="newScanMaxPages" type="number" min="1" max="100000" value="20000"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="newScanHeaders" class="block text-sm font-medium text-gray-700 mb-2">
+                            Custom Headers (Optional)
+                        </label>
+                        <textarea id="newScanHeaders" rows="3" placeholder="X-Custom-Header: value&#10;User-Agent: CustomAgent"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Enter headers in format: Header-Name: Header-Value (one per line)</p>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelNewScan" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 rounded-md transition-colors">
+                            <i class="fas fa-play mr-2"></i>Start Scan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script nonce="{{.nonce}}">
+        class Dashboard {
+            constructor() {
+                this.activeScans = new Set(); // Track scans that are currently running
+                this.pollingInterval = null;
+                this.token = localStorage.getItem('vidusec_token'); // Get JWT token
+                this.init();
+            }
+
+            init() {
+
+                this.setupEventListeners();
+                this.loadUserInfo();
+                this.loadDashboardData();
+                this.loadScans();
+                this.startPolling();
+            }
+
+            setupEventListeners() {
+                document.getElementById('newScanBtn').addEventListener('click', () => {
+                    this.showNewScanModal();
+                });
+
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.logout();
+                });
+
+                document.getElementById('closeResultsModal').addEventListener('click', () => {
+                    this.hideResultsModal();
+                });
+
+                // Close modal when clicking outside the modal content
+                document.getElementById('resultsModal').addEventListener('click', (e) => {
+                    console.log('Modal clicked, target:', e.target.id, 'currentTarget:', e.currentTarget.id);
+                    // Check if the click is on the modal backdrop (not on the modal content)
+                    if (e.target.id === 'resultsModal' || e.target.id === 'modalBackdrop') {
+                        console.log('Closing modal - clicked on backdrop');
+                        this.hideResultsModal();
+                    }
+                });
+
+                // Prevent clicks on modal content from closing the modal
+                document.getElementById('modalContent').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                // Admin Panel event listeners
+                document.getElementById('deleteAllUserScansBtn').addEventListener('click', () => {
+                    this.deleteAllUserScans();
+                });
+
+                document.getElementById('cleanupOldScansBtn').addEventListener('click', () => {
+                    this.cleanupOldScans();
+                });
+
+                document.getElementById('cleanupOrphanedFilesBtn').addEventListener('click', () => {
+                    this.cleanupOrphanedFiles();
+                });
+
+                document.getElementById('deleteAllScansBtn').addEventListener('click', () => {
+                    this.deleteAllScansForAllUsers();
+                });
+
+                // Admin tab functionality
+                document.getElementById('adminUsersTab').addEventListener('click', () => {
+                    this.switchAdminTab('users');
+                });
+
+                document.getElementById('adminSystemTab').addEventListener('click', () => {
+                    this.switchAdminTab('system');
+                });
+
+                // New Scan Modal event listeners
+                document.getElementById('closeNewScanModal').addEventListener('click', () => {
+                    this.hideNewScanModal();
+                });
+
+                document.getElementById('cancelNewScan').addEventListener('click', () => {
+                    this.hideNewScanModal();
+                });
+
+                // Close new scan modal when clicking outside
+                document.getElementById('newScanModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'newScanModal') {
+                        this.hideNewScanModal();
+                    }
+                });
+
+                // New scan form submission
+                document.getElementById('newScanForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.submitNewScan();
+                });
+            }
+
+            async loadUserInfo() {
+                try {
+                    const response = await this.apiCall('/auth/me');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.user = data.user;
+                        this.updateUserInfo();
+                        this.checkAdminAccess();
+                    } else {
+                        console.error('Failed to load user info');
+                    }
+                } catch (error) {
+                    console.error('Error loading user info:', error);
+                }
+            }
+
+            updateUserInfo() {
+                if (this.user) {
+                    document.getElementById('userInfo').textContent = `Welcome, ${this.user.username}`;
+                }
+            }
+
+            async loadDashboardData() {
+                try {
+                    const response = await this.apiCall('/dashboard/stats');
+                    if (response.ok) {
+                        const stats = await response.json();
+                        document.getElementById('totalScans').textContent = stats.total_scans;
+                        document.getElementById('completedScans').textContent = stats.completed_scans;
+                        document.getElementById('runningScans').textContent = stats.running_scans;
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard data:', error);
+                }
+            }
+
+            async loadScans() {
+                try {
+                    const response = await this.apiCall('/scanner/scans');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.displayScans(data.scans);
+                    }
+                } catch (error) {
+                    console.error('Error loading scans:', error);
+                }
+            }
+
+            displayScans(scans) {
+                const scansList = document.getElementById('scansList');
+                if (scans.length === 0) {
+                    scansList.innerHTML = '<p class="text-gray-500 text-center py-8">No scans found. Start your first scan!</p>';
+                    return;
+                }
+
+                // Update active scans tracking
+                this.activeScans.clear();
+                scans.forEach(scan => {
+                    if (scan.status === 'running' || scan.status === 'pending') {
+                        this.activeScans.add(scan.scan_uuid);
+                    }
+                });
+
+                scansList.innerHTML = scans.map(scan => `
+                    <div class="border border-gray-200 rounded-lg p-4 card-hover" id="scan-${scan.scan_uuid}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">${scan.target_url}</h3>
+                                <p class="text-sm text-gray-600">Scan ID: ${scan.scan_uuid.substring(0, 8)}...</p>
+                                <p class="text-sm text-gray-600">Created: ${new Date(scan.created_at).toLocaleString()}</p>
+                                <div class="mt-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        scan.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                        scan.status === 'running' ? 'bg-yellow-100 text-yellow-800' :
+                                        scan.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }" id="status-${scan.scan_uuid}">
+                                        ${scan.status}
+                                    </span>
+                                    ${scan.status === 'running' || scan.status === 'pending' ? `
+                                        <div class="mt-2">
+                                            <div class="bg-gray-200 rounded-full h-2">
+                                                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${scan.progress}%" id="progress-bar-${scan.scan_uuid}"></div>
+                                            </div>
+                                            <p class="text-xs text-gray-600 mt-1" id="progress-text-${scan.scan_uuid}">${scan.progress}% complete</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2" id="actions-${scan.scan_uuid}">
+                                ${scan.status === 'completed' ? `
+                                    <button onclick="dashboard.viewResults('${scan.scan_uuid}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                        <i class="fas fa-eye mr-1"></i>View Results
+                                    </button>
+                                    <button onclick="dashboard.rescan('${scan.scan_uuid}')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                                        <i class="fas fa-redo mr-1"></i>Rescan
+                                    </button>
+                                ` : ''}
+                                <button onclick="dashboard.deleteScan('${scan.scan_uuid}')" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            viewResults(scanUUID) {
+                console.log('Viewing results for scan UUID:', scanUUID);
+                // Navigate to the dedicated scan results page
+                window.location.href = `/scan-results/${scanUUID}`;
+            }
+
+            showResultsModal(scan, results) {
+                document.getElementById('scanDetails').innerHTML = `
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-900">Scan Details</h3>
+                        <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Target URL:</strong> ${scan.target_url}</div>
+                            <div><strong>Status:</strong> ${scan.status}</div>
+                            <div><strong>Max Depth:</strong> ${scan.max_depth}</div>
+                            <div><strong>Max Pages:</strong> ${scan.max_pages}</div>
+                            <div><strong>Started:</strong> ${scan.started_at ? new Date(scan.started_at).toLocaleString() : 'N/A'}</div>
+                            <div><strong>Completed:</strong> ${scan.completed_at ? new Date(scan.completed_at).toLocaleString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+
+                if (results.length === 0) {
+                    document.getElementById('resultsContent').innerHTML = '<p class="text-gray-500 text-center py-8">No results found for this scan.</p>';
+                } else {
+                    document.getElementById('resultsContent').innerHTML = `
+                        <h3 class="font-semibold text-gray-900 mb-4">Discovered Endpoints (${results.length})</h3>
+                        <div class="space-y-4">
+                            ${results.map(result => `
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                result.endpoint_type === 'get' ? 'bg-blue-100 text-blue-800' :
+                                                result.endpoint_type === 'post' ? 'bg-green-100 text-green-800' :
+                                                'bg-purple-100 text-purple-800'
+                                            }">
+                                                ${result.method} - ${result.endpoint_type}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm">
+                                        <div class="font-medium text-gray-900">${result.url}</div>
+                                        <div class="text-gray-600 mt-1">${result.description}</div>
+                                        ${Object.keys(result.parameters).length > 0 ? `
+                                            <div class="mt-2">
+                                                <strong>Parameters:</strong>
+                                                <pre class="bg-gray-100 p-2 rounded text-xs mt-1">${JSON.stringify(result.parameters, null, 2)}</pre>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                document.getElementById('resultsModal').classList.remove('hidden');
+            }
+
+            hideResultsModal() {
+                document.getElementById('resultsModal').classList.add('hidden');
+            }
+
+            showNewScanModal() {
+                document.getElementById('newScanModal').classList.remove('hidden');
+                // Clear form
+                document.getElementById('newScanForm').reset();
+                document.getElementById('newScanMaxDepth').value = '10';
+                document.getElementById('newScanMaxPages').value = '20000';
+            }
+
+            hideNewScanModal() {
+                document.getElementById('newScanModal').classList.add('hidden');
+            }
+
+            async submitNewScan() {
+                const targetUrl = document.getElementById('newScanTargetUrl').value;
+                const maxDepth = parseInt(document.getElementById('newScanMaxDepth').value);
+                const maxPages = parseInt(document.getElementById('newScanMaxPages').value);
+                const headersText = document.getElementById('newScanHeaders').value;
+
+                // Parse headers
+                const headers = {};
+                if (headersText.trim()) {
+                    const headerLines = headersText.split('\n');
+                    for (const line of headerLines) {
+                        const [key, ...valueParts] = line.split(':');
+                        if (key && valueParts.length > 0) {
+                            headers[key.trim()] = valueParts.join(':').trim();
+                        }
+                    }
+                }
+
+                try {
+                    const response = await this.apiCall('/scanner/scan', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            target_url: targetUrl,
+                            max_depth: maxDepth,
+                            max_pages: maxPages,
+                            headers: headers
+                        })
+                    });
+
+                    if (response.ok) {
+                        this.hideNewScanModal();
+                        this.showToast('Scan started successfully!', 'success');
+                        this.loadScans(); // Refresh the scans list
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to start scan', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error starting scan:', error);
+                    this.showToast('Error starting scan', 'error');
+                }
+            }
+
+            async deleteScan(scanUUID) {
+                if (!confirm('Are you sure you want to delete this scan?')) {
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${scanUUID}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        // Immediately remove the scan from UI
+                        this.removeScanFromUI(scanUUID);
+                        this.showToast('Scan deleted successfully', 'success');
+                        // Also refresh the data to ensure consistency
+                        this.loadScans();
+                        this.loadDashboardData();
+                    } else if (response.status === 404) {
+                        this.showToast('Scan not found - it may have been already deleted', 'warning');
+                        // Refresh the scans list to remove the non-existent scan
+                        this.loadScans();
+                        this.loadDashboardData();
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        this.showToast(errorData.error || 'Error deleting scan', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting scan:', error);
+                    this.showToast('Error deleting scan', 'error');
+                }
+            }
+
+            removeScanFromUI(scanUUID) {
+                // Remove the scan from the scans list in the UI
+                const scanElement = document.getElementById(`scan-${scanUUID}`);
+                if (scanElement) {
+                    scanElement.remove();
+                    console.log(`Removed scan ${scanUUID} from UI`);
+                } else {
+                    console.log(`Scan element not found for UUID: ${scanUUID}`);
+                }
+                
+                // Also remove from active scans tracking
+                this.activeScans.delete(scanUUID);
+                
+                // If no scans left, show the empty state
+                const scansList = document.getElementById('scansList');
+                if (scansList && scansList.children.length === 0) {
+                    scansList.innerHTML = '<p class="text-gray-500 text-center py-8">No scans found. Start your first scan!</p>';
+                }
+            }
+
+            async rescan(scanUUID) {
+                if (!confirm('Are you sure you want to rescan this target? This will update the existing scan results.')) {
+                    return;
+                }
+
+                console.log(`Starting rescan for scan UUID: ${scanUUID}`);
+                
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${scanUUID}/rescan`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            max_depth: 10,
+                            max_pages: 20000
+                        })
+                    });
+
+                    console.log('Rescan API response:', response.status, response.ok);
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Rescan result:', result);
+                        this.showToast(`Rescan started successfully! Updating scan`, 'success');
+                        
+                        // Add to active scans for real-time tracking
+                        this.activeScans.add(scanUUID);
+                        
+                        // Refresh the scans list to show updated status
+                        this.loadScans();
+                        this.loadDashboardData();
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('Rescan error response:', errorData);
+                        this.showToast(errorData.error || 'Error starting rescan', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error starting rescan:', error);
+                    this.showToast('Error starting rescan', 'error');
+                }
+            }
+
+            logout() {
+                // Call logout API to invalidate session
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                }).then(() => {
+                    // Clear token from localStorage
+                localStorage.removeItem('vidusec_token');
+                this.stopPolling();
+                window.location.href = '/';
+                }).catch(() => {
+                    // Clear token from localStorage even if logout fails
+                    localStorage.removeItem('vidusec_token');
+                    this.stopPolling();
+                    window.location.href = '/';
+                });
+            }
+
+            // Real-time polling methods
+            startPolling() {
+                // Poll every 2 seconds for active scans
+                this.pollingInterval = setInterval(() => {
+                    if (this.activeScans.size > 0) {
+                        this.pollActiveScans();
+                    }
+                }, 2000);
+            }
+
+            stopPolling() {
+                if (this.pollingInterval) {
+                    clearInterval(this.pollingInterval);
+                    this.pollingInterval = null;
+                }
+            }
+
+            async pollActiveScans() {
+                const activeScanIds = Array.from(this.activeScans);
+                if (activeScanIds.length === 0) {
+                    this.hidePollingIndicator();
+                    return;
+                }
+
+                this.showPollingIndicator();
+                
+                try {
+                    // Poll each active scan for status updates
+                    const promises = activeScanIds.map(scanId => this.getScanStatus(scanId));
+                    const results = await Promise.allSettled(promises);
+
+                    results.forEach((result, index) => {
+                        if (result.status === 'fulfilled' && result.value) {
+                            this.updateScanInUI(result.value);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error polling active scans:', error);
+                } finally {
+                    // Hide indicator after a short delay
+                    setTimeout(() => this.hidePollingIndicator(), 500);
+                }
+            }
+
+            showPollingIndicator() {
+                const indicator = document.getElementById('pollingIndicator');
+                if (indicator) {
+                    indicator.classList.remove('hidden');
+                }
+            }
+
+            hidePollingIndicator() {
+                const indicator = document.getElementById('pollingIndicator');
+                if (indicator) {
+                    indicator.classList.add('hidden');
+                }
+            }
+
+            async getScanStatus(scanUUID) {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${scanUUID}/status`);
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                } catch (error) {
+                    console.error(`Error getting status for scan ${scanUUID}:`, error);
+                }
+                return null;
+            }
+
+            updateScanInUI(scanData) {
+                const scanUUID = scanData.scan_id;
+                
+                // Update status badge
+                const statusElement = document.getElementById(`status-${scanUUID}`);
+                if (statusElement) {
+                    statusElement.textContent = scanData.status;
+                    statusElement.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        scanData.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        scanData.status === 'running' ? 'bg-yellow-100 text-yellow-800' :
+                        scanData.status === 'failed' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`;
+                }
+
+                // Update progress bar and text
+                const progressBar = document.getElementById(`progress-bar-${scanUUID}`);
+                const progressText = document.getElementById(`progress-text-${scanUUID}`);
+                
+                if (progressBar && progressText) {
+                    progressBar.style.width = `${scanData.progress}%`;
+                    progressText.textContent = `${scanData.progress}% complete`;
+                }
+
+                // Update actions section
+                const actionsElement = document.getElementById(`actions-${scanUUID}`);
+                if (actionsElement) {
+                    if (scanData.status === 'completed') {
+                        actionsElement.innerHTML = `
+                            <button onclick="dashboard.viewResults('${scanUUID}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                <i class="fas fa-eye mr-1"></i>View Results
+                            </button>
+                            <button onclick="dashboard.rescan('${scanUUID}')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                                <i class="fas fa-redo mr-1"></i>Rescan
+                            </button>
+                            <button onclick="dashboard.deleteScan('${scanUUID}')" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        `;
+                        // Remove from active scans
+                        this.activeScans.delete(scanUUID);
+                    } else if (scanData.status === 'failed') {
+                        actionsElement.innerHTML = `
+                            <button onclick="dashboard.deleteScan('${scanUUID}')" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        `;
+                        // Remove from active scans
+                        this.activeScans.delete(scanUUID);
+                    }
+                }
+
+                // If scan completed or failed, refresh dashboard stats
+                if (scanData.status === 'completed' || scanData.status === 'failed') {
+                    this.loadDashboardData();
+                }
+            }
+
+            async apiCall(endpoint, options = {}) {
+                const url = '/api' + endpoint;
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    credentials: 'include', // Include cookies for session-based auth
+                    ...options
+                };
+
+                // Add Authorization header if token is available
+                if (this.token) {
+                    config.headers['Authorization'] = `Bearer ${this.token}`;
+                }
+
+                const response = await fetch(url, config);
+                
+                // Debug logging
+                console.log(`API call to ${url} returned status: ${response.status}`);
+                
+                // Handle authentication errors globally - redirect immediately
+                if (response.status === 401) {
+                    console.log('Session expired, redirecting to login');
+                    // Redirect immediately without delay
+                    window.location.href = '/';
+                    return response;
+                }
+                
+                return response;
+            }
+
+            showToast(message, type = 'info') {
+                const toastContainer = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                
+                const colors = {
+                    success: 'bg-green-500',
+                    error: 'bg-red-500',
+                    warning: 'bg-yellow-500',
+                    info: 'bg-blue-500'
+                };
+
+                const icons = {
+                    success: 'fas fa-check-circle',
+                    error: 'fas fa-exclamation-circle',
+                    warning: 'fas fa-exclamation-triangle',
+                    info: 'fas fa-info-circle'
+                };
+
+                toast.className = `${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg mb-2 flex items-center max-w-sm`;
+                toast.innerHTML = `
+                    <i class="${icons[type]} mr-2"></i>
+                    <span>${message}</span>
+                    <button class="ml-4 text-white hover:text-gray-200" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+
+                toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 5000);
+            }
+
+            // Admin Panel Methods
+            async deleteAllUserScans() {
+                if (!confirm('⚠️ WARNING: This will delete ALL scans for your account!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
+                    return;
+                }
+
+                if (!confirm('Are you absolutely sure? This will permanently delete all your scan data!')) {
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall('/scanner/scans/bulk/all', {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        this.showToast('All your scans have been deleted successfully', 'success');
+                        this.loadScans();
+                        this.loadDashboardData();
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to delete scans', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting all user scans:', error);
+                    this.showToast('Error deleting scans', 'error');
+                }
+            }
+
+            async cleanupOldScans() {
+                if (!confirm('This will clean up old numeric scan directories that are no longer in the database. Continue?')) {
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall('/scanner/admin/cleanup-old-scans', {
+                        method: 'POST'
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showToast(result.message || 'Old scans cleanup completed', 'success');
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to cleanup old scans', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error cleaning up old scans:', error);
+                    this.showToast('Error cleaning up old scans', 'error');
+                }
+            }
+
+            async cleanupOrphanedFiles() {
+                if (!confirm('This will remove scan directories that exist on disk but not in the database. Continue?')) {
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall('/scanner/admin/cleanup-orphaned-files', {
+                        method: 'POST'
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showToast(result.message || 'Orphaned files cleanup completed', 'success');
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to cleanup orphaned files', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error cleaning up orphaned files:', error);
+                    this.showToast('Error cleaning up orphaned files', 'error');
+                }
+            }
+
+            async deleteAllScansForAllUsers() {
+                if (!confirm('🚨 CRITICAL WARNING: This will delete ALL scans from ALL users!\n\nThis action cannot be undone and will affect all users on the system. Are you sure?')) {
+                    return;
+                }
+
+                if (!confirm('Type "DELETE ALL" to confirm this dangerous operation:')) {
+                    return;
+                }
+
+                const confirmation = prompt('Type "DELETE ALL" to confirm:');
+                if (confirmation !== 'DELETE ALL') {
+                    this.showToast('Operation cancelled - confirmation text did not match', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall('/scanner/admin/scans/bulk/all', {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showToast(result.message || 'All scans deleted successfully', 'success');
+                        this.loadScans();
+                        this.loadDashboardData();
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to delete all scans', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting all scans:', error);
+                    this.showToast('Error deleting all scans', 'error');
+                }
+            }
+
+            // Admin Panel Methods
+            checkAdminAccess() {
+                console.log('Checking admin access for user:', this.user);
+                // Check if current user has admin role
+                if (this.user && this.user.role === 'admin') {
+                    console.log('User is admin, showing admin panel');
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    this.loadAllUsers();
+                } else {
+                    console.log('User is not admin or user not loaded');
+                }
+            }
+
+            switchAdminTab(tab) {
+                // Update tab buttons
+                document.querySelectorAll('.admin-tab').forEach(btn => {
+                    btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+
+                // Hide all content
+                document.querySelectorAll('.admin-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                if (tab === 'users') {
+                    document.getElementById('adminUsersTab').classList.add('active', 'border-blue-500', 'text-blue-600');
+                    document.getElementById('adminUsersTab').classList.remove('border-transparent', 'text-gray-500');
+                    document.getElementById('adminUsersContent').classList.remove('hidden');
+                    this.loadAllUsers();
+                } else if (tab === 'system') {
+                    document.getElementById('adminSystemTab').classList.add('active', 'border-blue-500', 'text-blue-600');
+                    document.getElementById('adminSystemTab').classList.remove('border-transparent', 'text-gray-500');
+                    document.getElementById('adminSystemContent').classList.remove('hidden');
+                }
+            }
+
+            async loadAllUsers() {
+                try {
+                    const response = await this.apiCall('/scanner/admin/users');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.displayUsers(data.users);
+                    } else {
+                        this.showToast('Failed to load users', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                    this.showToast('Error loading users', 'error');
+                }
+            }
+
+            displayUsers(users) {
+                const usersList = document.getElementById('usersList');
+                if (users.length === 0) {
+                    usersList.innerHTML = '<p class="text-gray-500 text-center py-4">No users found</p>';
+                    return;
+                }
+
+                usersList.innerHTML = users.map(user => `
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    <h4 class="text-lg font-medium text-gray-900">${user.username}</h4>
+                                    ${user.role === 'admin' ? '<span class="ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Admin</span>' : ''}
+                                </div>
+                                <p class="text-sm text-gray-600 mb-1">Email: ${user.email}</p>
+                                <p class="text-sm text-gray-600 mb-1">User ID: ${user.id}</p>
+                                <p class="text-sm text-gray-600 mb-3">Created: ${new Date(user.created_at).toLocaleDateString()}</p>
+                                
+                                <div class="flex space-x-2">
+                                    <button onclick="window.dashboard.viewUserStats(${user.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-chart-bar mr-1"></i>View Stats
+                                    </button>
+                                    ${user.role !== 'admin' ? `
+                                        <button onclick="window.dashboard.deleteUser(${user.id}, '${user.username}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                                            <i class="fas fa-trash mr-1"></i>Delete User
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async viewUserStats(userID) {
+                try {
+                    const response = await this.apiCall(`/scanner/admin/users/${userID}/stats`);
+                    if (response.ok) {
+                        const stats = await response.json();
+                        this.showUserStatsModal(userID, stats);
+                    } else {
+                        this.showToast('Failed to load user statistics', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading user stats:', error);
+                    this.showToast('Error loading user statistics', 'error');
+                }
+            }
+
+            showUserStatsModal(userID, stats) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">User Statistics</h3>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-sm text-blue-600">Total Scans</p>
+                                <p class="text-2xl font-bold text-blue-900">${stats.total_scans || 0}</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <p class="text-sm text-green-600">Completed</p>
+                                <p class="text-2xl font-bold text-green-900">${stats.completed_scans || 0}</p>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg">
+                                <p class="text-sm text-yellow-600">Running</p>
+                                <p class="text-2xl font-bold text-yellow-900">${stats.running_scans || 0}</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <p class="text-sm text-purple-600">Endpoints</p>
+                                <p class="text-2xl font-bold text-purple-900">${stats.total_endpoints || 0}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h4 class="text-md font-medium text-gray-900 mb-2">Recent Scans</h4>
+                            <div class="space-y-2">
+                                ${stats.recent_scans && stats.recent_scans.length > 0 ? 
+                                    stats.recent_scans.map(scan => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="text-sm">${scan.target_url}</span>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-xs px-2 py-1 rounded ${scan.status === 'completed' ? 'bg-green-100 text-green-800' : scan.status === 'running' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}">${scan.status}</span>
+                                                <button onclick="window.dashboard.viewUserScanResults('${scan.scan_uuid}')" class="text-blue-600 hover:text-blue-800 text-xs" title="View Results">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button onclick="window.dashboard.deleteUserScan(${scan.id})" class="text-red-600 hover:text-red-800 text-xs" title="Delete Scan">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('') : 
+                                    '<p class="text-gray-500 text-sm">No recent scans</p>'
+                                }
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            async deleteUser(userID, username) {
+                if (!confirm(`⚠️ WARNING: This will permanently delete user "${username}" and ALL their data!\n\nThis action cannot be undone. Are you sure?`)) {
+                    return;
+                }
+
+                if (!confirm(`Are you absolutely sure you want to delete user "${username}"?`)) {
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall(`/scanner/admin/users/${userID}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        this.showToast(`User "${username}" deleted successfully`, 'success');
+                        this.loadAllUsers();
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to delete user', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    this.showToast('Error deleting user', 'error');
+                }
+            }
+
+            async deleteUserScan(scanID) {
+                if (!confirm('Are you sure you want to delete this scan?')) {
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall(`/scanner/admin/scans/${scanID}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        this.showToast('Scan deleted successfully', 'success');
+                        // Refresh the current modal if it exists
+                        const modal = document.querySelector('.fixed.inset-0');
+                        if (modal) {
+                            modal.remove();
+                        }
+                    } else {
+                        const error = await response.json();
+                        this.showToast(error.error || 'Failed to delete scan', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting user scan:', error);
+                    this.showToast('Error deleting scan', 'error');
+                }
+            }
+
+            viewUserScanResults(scanUUID) {
+                // Open scan results in a new tab
+                const scanResultsUrl = `/scan-results/${scanUUID}`;
+                window.open(scanResultsUrl, '_blank');
+            }
+        }
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dashboard = new Dashboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style nonce="{{.nonce}}">
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+        }
+        .sidebar-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        /* Custom scrollbar styles */
+        #contentArea::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #contentArea::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 4px;
+        }
+        
+        #contentArea::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+        
+        #contentArea::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 overflow-hidden">
+    <!-- Navigation Header -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-700 shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/dashboard" class="text-white hover:text-gray-200 mr-4 transition-colors">
+                        <i class="fas fa-arrow-left text-lg"></i>
+                    </a>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <a href="/dashboard" class="text-xl font-bold text-white hover:text-gray-200 transition-colors">HiddenTrace</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userInfo" class="text-white font-medium"></span>
+                    <button onclick="logout()" class="text-white hover:text-gray-200 transition-colors flex items-center">
+                        <i class="fas fa-sign-out-alt text-lg mr-2"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Scan Summary (Top Panel) -->
+    <div class="bg-white border-b border-gray-200 p-6">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 id="scanTitle" class="text-2xl font-bold text-gray-900">Loading...</h2>
+                    <p id="scanUrl" class="text-gray-600 mt-1"></p>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div class="text-center">
+                        <div id="scanStatus" class="text-sm font-medium text-gray-500">Status</div>
+                        <div id="scanStatusBadge" class="mt-1"></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm font-medium text-gray-500">Progress</div>
+                        <div id="scanProgress" class="mt-1 text-lg font-semibold text-gray-900">0%</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm font-medium text-gray-500">Scan Date</div>
+                        <div id="scanDate" class="mt-1 text-sm text-gray-900"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-4">
+        <div class="flex gap-6 h-[calc(100vh-180px)]">
+            <!-- Left Sidebar (Stable) -->
+            <div class="w-64 bg-white rounded-lg shadow-sm border border-gray-200 flex-shrink-0">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Results</h3>
+                    <nav class="space-y-2">
+                        <button id="endpointsBtn" onclick="showSection('endpoints')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg font-medium text-gray-700 active">
+                            <i class="fas fa-link mr-3"></i>Endpoints
+                            <span id="endpointsCount" class="ml-auto bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">0</span>
+                        </button>
+                        <button id="parametersBtn" onclick="console.log('Parameters button clicked!'); showSection('parameters')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg font-medium text-gray-700">
+                            <i class="fas fa-list mr-3"></i>Parameters
+                            <span id="parametersCount" class="ml-auto bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">0</span>
+                        </button>
+                        <button id="fuzzingBtn" onclick="showSection('fuzzing')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg font-medium text-gray-700">
+                            <i class="fas fa-bug mr-3"></i>Parameter Fuzzing
+                            <span id="fuzzingStatus" class="ml-auto bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">Ready</span>
+                        </button>
+                        <button id="hiddenUrlsBtn" onclick="showSection('hiddenUrls')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg font-medium text-gray-700">
+                            <i class="fas fa-eye-slash mr-3"></i>Hidden URLs
+                            <span id="hiddenUrlsCount" class="ml-auto bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">0</span>
+                        </button>
+                        <button id="axiomScanBtn" onclick="showSection('axiomScan')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg font-medium text-gray-700">
+                            <i class="fas fa-rocket mr-3"></i>Axiom Scan
+                        </button>
+                        <button id="exportBtn" onclick="exportResults()" class="sidebar-item w-full text-left px-4 py-3 rounded-lg font-medium text-gray-700">
+                            <i class="fas fa-download mr-3"></i>Export Results
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Right Content Panel (Scrollable) -->
+            <div class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div id="contentArea" class="h-full overflow-y-auto p-6" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+                <!-- Endpoints Section -->
+                <div id="endpointsSection" class="section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Discovered Endpoints</h3>
+                           <div class="flex space-x-2">
+                               <select id="endpointFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                   <option value="all">All Endpoints</option>
+                                   <option value="GET">GET Requests</option>
+                                   <option value="POST">POST Requests</option>
+                               </select>
+                               <input type="text" id="endpointSearch" placeholder="Search endpoints..." class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64">
+                               <button onclick="exportURLs()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                   <i class="fas fa-download mr-2"></i>Export URLs
+                               </button>
+                           </div>
+                    </div>
+                    <div id="endpointsList" class="space-y-4">
+                        <!-- Endpoints will be loaded here -->
+                    </div>
+                </div>
+
+
+
+                <!-- Parameters Section -->
+                <div id="parametersSection" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Discovered Parameters</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="exportParameters()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-download mr-2"></i>Export as TXT
+                            </button>
+                        </div>
+                    </div>
+                    <div id="parametersList" class="space-y-2">
+                        <!-- Parameters will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Parameter Fuzzing Section -->
+                <div id="fuzzingSection" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Parameter Fuzzing</h3>
+                        <div class="flex space-x-2 items-center">
+                            <div class="flex items-center gap-2">
+                            <input id="chunkSizeInput" type="number" min="1" value="500" class="border border-gray-300 rounded px-2 py-1 text-sm w-24" title="Chunk size">
+                            <button onclick="startParameterFuzzing()" id="startFuzzingBtn" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-play mr-2"></i>Start Fuzzing
+                            </button>
+                            </div>
+                            <button onclick="stopParameterFuzzing()" id="stopFuzzingBtn" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-stop mr-2"></i>Stop Fuzzing
+                            </button>
+                            <!-- Progress Bar (hidden by default) -->
+                            <div id="fuzzingProgressContainer" class="hidden flex-1 max-w-md">
+                                <div class="flex items-center space-x-2">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                        <div id="fuzzingProgressBar" class="bg-orange-600 h-2 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                                    </div>
+                                    <span id="fuzzingProgressText" class="text-sm text-gray-600 min-w-0">0%</span>
+                                </div>
+                                <div id="fuzzingProgressStatus" class="text-xs text-gray-500 mt-1">Initializing...</div>
+                                <div id="fuzzingProgressUrls" class="text-xs text-blue-600 mt-1 font-medium"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                        <h4 class="text-lg font-medium text-gray-900 mb-4">Fuzzing Process</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3">1</div>
+                                <span class="text-gray-700">Extract parameters from discovered endpoints</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3">2</div>
+                                <span class="text-gray-700">Combine with predefined wordlist to create brutewordlist.txt</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3">3</div>
+                                <span class="text-gray-700">Run paramsmapper on GET endpoints</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3">4</div>
+                                <span class="text-gray-700">Run paramsmapper on POST endpoints</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3">5</div>
+                                <span class="text-gray-700">Generate reports (get_report.json, post_report.json)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="fuzzingStatus" class="hidden">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center">
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+                                <span class="text-blue-800 font-medium">Parameter fuzzing in progress...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="fuzzingResults" class="hidden">
+                        <h4 class="text-lg font-medium text-gray-900 mb-4">Fuzzing Results</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                <h5 class="font-medium text-gray-900 mb-2">GET Requests Report</h5>
+                                <p class="text-sm text-gray-600 mb-3">Parameter fuzzing results for GET endpoints</p>
+                                <button onclick="downloadReport('get')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </button>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                <h5 class="font-medium text-gray-900 mb-2">POST Requests Report</h5>
+                                <p class="text-sm text-gray-600 mb-3">Parameter fuzzing results for POST endpoints</p>
+                                <button onclick="downloadReport('post')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden URLs Section -->
+                <div id="hiddenUrlsSection" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Hidden URLs (Paramsmapper Results)</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="refreshHiddenUrls()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-sync-alt mr-2"></i>Refresh
+                            </button>
+                            <button onclick="exportHiddenUrls()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 class="font-medium text-blue-900 mb-2">GET Requests</h4>
+                                <p class="text-sm text-blue-700 mb-2">Hidden parameters found in GET endpoints</p>
+                                <div id="getHiddenCount" class="text-2xl font-bold text-blue-600">0</div>
+                            </div>
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <h4 class="font-medium text-purple-900 mb-2">POST Requests</h4>
+                                <p class="text-sm text-purple-700 mb-2">Hidden parameters found in POST endpoints</p>
+                                <div id="postHiddenCount" class="text-2xl font-bold text-purple-600">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- GET Hidden URLs -->
+                        <div class="bg-white border border-gray-200 rounded-lg">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                <h4 class="font-medium text-gray-900 flex items-center">
+                                    <i class="fas fa-link mr-2 text-blue-600"></i>
+                                    GET Hidden URLs
+                                    <span id="getHiddenBadge" class="ml-auto bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">0</span>
+                                </h4>
+                            </div>
+                            <div id="getHiddenUrls" class="p-4">
+                                <div class="text-center text-gray-500 py-8">
+                                    <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                                    <p>No hidden GET URLs found yet. Run parameter fuzzing to discover hidden parameters.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- POST Hidden URLs -->
+                        <div class="bg-white border border-gray-200 rounded-lg">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                <h4 class="font-medium text-gray-900 flex items-center">
+                                    <i class="fas fa-paper-plane mr-2 text-purple-600"></i>
+                                    POST Hidden URLs
+                                    <span id="postHiddenBadge" class="ml-auto bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">0</span>
+                                </h4>
+                            </div>
+                            <div id="postHiddenUrls" class="p-4">
+                                <div class="text-center text-gray-500 py-8">
+                                    <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                                    <p>No hidden POST URLs found yet. Run parameter fuzzing to discover hidden parameters.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Axiom Scan Section -->
+                <div id="axiomScanSection" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">
+                            <i class="fas fa-rocket mr-2 text-blue-500"></i>Axiom XSS Scan
+                        </h3>
+                        <button id="startAxiomScanBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-play mr-1"></i>Start Axiom Scan
+                        </button>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p class="text-sm text-gray-600 mb-4">
+                            Run XSS vulnerability scanning using Axiom framework. This will:
+                            <br>• Use all discovered URLs from crawling and parameter fuzzing
+                            <br>• Execute axiom-scan with xss-scan module
+                            <br>• Display results in real-time
+                        </p>
+                        
+                        <!-- Axiom Scan Progress -->
+                        <div id="axiomScanProgress" class="mb-6 hidden">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span id="axiomProgressText" class="text-sm font-medium text-blue-900">Preparing Axiom scan...</span>
+                                    <span id="axiomProgressPercent" class="text-sm font-medium text-blue-900">0%</span>
+                                </div>
+                                <div class="w-full bg-blue-200 rounded-full h-2">
+                                    <div id="axiomProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                <!-- Axiom Scan Results -->
+                <div id="axiomResults" class="hidden">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        Axiom Scan Results
+                        <span id="axiomResultsCount" class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">0</span>
+                    </h4>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div id="axiomResultsContent" class="space-y-4">
+                                    <!-- Results will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- No results message -->
+                        <div id="noAxiomResults" class="text-center py-12">
+                            <i class="fas fa-rocket text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-500">No Axiom scan has been run yet. Click "Start Axiom Scan" to begin.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script nonce="{{.nonce}}">
+        class ScanResults {
+            constructor() {
+                this.scanId = this.getScanIdFromUrl();
+                this.scanData = null;
+                this.results = [];
+                this.parameters = [];
+                this.currentSection = 'endpoints';
+                this.pollingInterval = null; // Track polling interval
+                this.isFuzzingActive = false; // Track if fuzzing is active
+                this.pollingTimeouts = []; // Track all polling timeouts
+                this.token = localStorage.getItem('vidusec_token'); // Get JWT token
+                this.init();
+            }
+
+            init() {
+
+                this.updateUserInfo();
+                this.loadScanData();
+                this.loadScanResults();
+                this.setupEventListeners();
+                this.checkFuzzingStatusOnLoad();
+                // Try to load any existing Axiom results on page load
+                // This will populate the Axiom section if xss.txt already exists
+                this.loadAxiomResults();
+                
+                // Clear all polling when page is unloaded
+                window.addEventListener('beforeunload', () => {
+                    this.clearAllPolling();
+                });
+            }
+
+            setupEventListeners() {
+                // Add event listeners for filter and search
+                const filterSelect = document.getElementById('endpointFilter');
+                const searchInput = document.getElementById('endpointSearch');
+                
+                if (filterSelect) {
+                    filterSelect.addEventListener('change', () => {
+                        console.log('Filter changed');
+                        this.filterEndpoints();
+                    });
+                }
+                
+                if (searchInput) {
+                    searchInput.addEventListener('input', () => {
+                        console.log('Search input changed');
+                        this.searchEndpoints();
+                    });
+                }
+            }
+
+            getScanIdFromUrl() {
+                const path = window.location.pathname;
+                const match = path.match(/\/scan-results\/([a-f0-9-]+)/);
+                return match ? match[1] : null;
+            }
+
+            updateUserInfo() {
+                const userInfo = document.getElementById('userInfo');
+                if (this.user) {
+                    userInfo.textContent = `Welcome, ${this.user.username}`;
+                }
+            }
+
+            async loadScanData() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}`);
+                    if (response.ok) {
+                        this.scanData = await response.json();
+                        this.updateScanSummary();
+                    } else {
+                        this.showToast('Error loading scan data', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading scan data:', error);
+                    this.showToast('Error loading scan data', 'error');
+                }
+            }
+
+            async loadScanResults() {
+                try {
+                    console.log('Loading scan results for scan ID:', this.scanId);
+                    
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/results`);
+                    console.log('Scan results response:', response.status, response.ok);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Scan results data:', data);
+                        this.results = data.results || [];
+                        console.log('Results array:', this.results);
+                        this.updateCounts();
+                        this.displayEndpoints();
+                        this.loadParameters(); // Load parameters on page load
+                        this.loadHiddenUrls(); // Load hidden URLs on page load
+                    } else {
+                        console.error('Failed to load scan results:', response.status);
+                        this.showToast('Error loading scan results', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading scan results:', error);
+                    this.showToast('Error loading scan results', 'error');
+                }
+            }
+
+            updateScanSummary() {
+                if (!this.scanData) return;
+
+                document.getElementById('scanTitle').textContent = 'Scan Results';
+                document.getElementById('scanUrl').textContent = this.scanData.scan.target_url;
+                document.getElementById('scanProgress').textContent = `${this.scanData.scan.progress}%`;
+                document.getElementById('scanDate').textContent = new Date(this.scanData.scan.created_at).toLocaleString();
+
+                // Update status badge
+                const statusBadge = document.getElementById('scanStatusBadge');
+                const status = this.scanData.scan.status;
+                statusBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    status === 'completed' ? 'bg-green-100 text-green-800' :
+                    status === 'running' ? 'bg-yellow-100 text-yellow-800' :
+                    status === 'failed' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                }`;
+                statusBadge.textContent = status;
+            }
+
+            updateCounts() {
+                console.log('Updating counts with results:', this.results);
+                console.log('Results length:', this.results.length);
+                
+                // Count all endpoints (GET, POST, JS)
+                const allEndpoints = this.results.filter(r => r.endpoint_type === 'get' || r.endpoint_type === 'post' || r.endpoint_type === 'js_api');
+                const getEndpoints = this.results.filter(r => r.endpoint_type === 'get');
+                const postEndpoints = this.results.filter(r => r.endpoint_type === 'post');
+                const jsEndpoints = this.results.filter(r => r.endpoint_type === 'js_api');
+                const forms = this.results.filter(r => r.endpoint_type === 'post' && r.form_data && Object.keys(r.form_data).length > 0);
+
+                console.log('Endpoint counts:', {
+                    total: this.results.length,
+                    allEndpoints: allEndpoints.length,
+                    getEndpoints: getEndpoints.length,
+                    postEndpoints: postEndpoints.length,
+                    jsEndpoints: jsEndpoints.length,
+                    forms: forms.length
+                });
+
+                // Debug: Show sample of each endpoint type
+                if (getEndpoints.length > 0) {
+                    console.log('Sample GET endpoint:', getEndpoints[0]);
+                }
+                if (postEndpoints.length > 0) {
+                    console.log('Sample POST endpoint:', postEndpoints[0]);
+                }
+                if (jsEndpoints.length > 0) {
+                    console.log('Sample JS endpoint:', jsEndpoints[0]);
+                }
+
+                // Update the left panel counts
+                document.getElementById('endpointsCount').textContent = allEndpoints.length;
+                // Note: formsCount and javascriptCount elements were removed when we cleaned up the UI
+                
+                // Update parameters count if parameters are loaded
+                if (this.parameters && this.parameters.length > 0) {
+                    document.getElementById('parametersCount').textContent = this.parameters.length;
+                }
+            }
+
+            displayEndpoints() {
+                // Use the same filtering logic as the filter function
+                this.filterEndpoints();
+            }
+
+            showSection(section) {
+                console.log('showSection called with:', section);
+                
+                // Hide all sections
+                document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+                
+                // Remove active class from all sidebar items
+                document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                
+                // Show selected section
+                const sectionElement = document.getElementById(`${section}Section`);
+                console.log('Section element:', sectionElement);
+                if (sectionElement) {
+                    sectionElement.classList.remove('hidden');
+                    console.log('Section shown:', section);
+                } else {
+                    console.error('Section element not found:', `${section}Section`);
+                }
+                
+                // Add active class to selected sidebar item
+                const buttonElement = document.getElementById(`${section}Btn`);
+                console.log('Button element:', buttonElement);
+                if (buttonElement) {
+                    buttonElement.classList.add('active');
+                    console.log('Button activated:', section);
+                } else {
+                    console.error('Button element not found:', `${section}Btn`);
+                }
+                
+                this.currentSection = section;
+
+                // Load data for specific sections
+                if (section === 'parameters' && (!this.parameters || this.parameters.length === 0)) {
+                    console.log('Loading parameters for section');
+                    this.loadParameters();
+                } else if (section === 'parameters') {
+                    console.log('Parameters already loaded, displaying them');
+                    this.displayParameters();
+                } else if (section === 'hiddenUrls') {
+                    console.log('Loading hidden URLs for section');
+                    this.loadHiddenUrls();
+                }
+            }
+
+            filterEndpoints() {
+                const filterSelect = document.getElementById('endpointFilter');
+                const searchInput = document.getElementById('endpointSearch');
+                
+                if (!filterSelect || !searchInput) {
+                    console.error('Filter elements not found');
+                    return;
+                }
+                
+                const filter = filterSelect.value;
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                console.log('Filtering endpoints:', { filter, searchTerm, totalResults: this.results.length });
+                console.log('Sample result:', this.results[0]);
+                
+                // Debug: Show endpoint type distribution
+                const typeCounts = this.results.reduce((acc, result) => {
+                    acc[result.endpoint_type] = (acc[result.endpoint_type] || 0) + 1;
+                    return acc;
+                }, {});
+                console.log('Endpoint type distribution:', typeCounts);
+                
+                const filteredResults = this.results.filter(result => {
+                    const matchesFilter = filter === 'all' || 
+                        (filter === 'GET' && result.endpoint_type === 'get') ||
+                        (filter === 'POST' && result.endpoint_type === 'post') ||
+                        (filter === 'JS' && result.endpoint_type === 'js_api');
+                    
+                    const matchesSearch = searchTerm === '' || 
+                        result.url.toLowerCase().includes(searchTerm) ||
+                        (result.description && result.description.toLowerCase().includes(searchTerm));
+                    
+                    console.log(`Result ${result.url}: filter=${matchesFilter}, search=${matchesSearch}, type=${result.endpoint_type}`);
+                    return matchesFilter && matchesSearch;
+                });
+                
+                console.log('Filtered results:', filteredResults.length);
+                this.displayFilteredEndpoints(filteredResults);
+            }
+
+            searchEndpoints() {
+                console.log('Search triggered');
+                this.filterEndpoints();
+            }
+
+            displayFilteredEndpoints(results) {
+                const container = document.getElementById('endpointsList');
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="text-center py-12"><i class="fas fa-search text-4xl text-gray-400 mb-4"></i><p class="text-gray-500">No endpoints match your search</p></div>';
+                    return;
+                }
+
+                container.innerHTML = results.map((result, index) => `
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 card-hover transition-all">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                       <div class="flex items-center mb-2">
+                                           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                               result.endpoint_type === 'get' ? 'bg-blue-100 text-blue-800' :
+                                               result.endpoint_type === 'post' ? 'bg-green-100 text-green-800' :
+                                               'bg-yellow-100 text-yellow-800'
+                                           }">
+                                               ${result.method || result.endpoint_type.toUpperCase()}
+                                           </span>
+                                           <span class="ml-2 text-sm text-gray-500">${result.endpoint_type.toUpperCase()}</span>
+                                       </div>
+                                <h4 class="text-lg font-medium text-gray-900 mb-3">${result.url}</h4>
+                                
+                                <div class="flex flex-wrap gap-2">
+                                    ${result.parameters && Object.keys(result.parameters).length > 0 ? `
+                                        <button onclick="toggleDetails('params-${index}')" class="flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors">
+                                            <i class="fas fa-list mr-2"></i>Parameters
+                                            <i class="fas fa-chevron-down ml-2 text-xs" id="params-icon-${index}"></i>
+                                        </button>
+                                    ` : ''}
+                                    
+                                    ${result.form_data && Object.keys(result.form_data).length > 0 ? `
+                                        <button onclick="toggleDetails('form-${index}')" class="flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm hover:bg-green-100 transition-colors">
+                                            <i class="fas fa-wpforms mr-2"></i>Form Data
+                                            <i class="fas fa-chevron-down ml-2 text-xs" id="form-icon-${index}"></i>
+                                        </button>
+                                    ` : ''}
+                                    
+                                    ${result.headers && Object.keys(result.headers).length > 0 ? `
+                                        <button onclick="toggleDetails('headers-${index}')" class="flex items-center px-3 py-1 bg-gray-50 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors">
+                                            <i class="fas fa-heading mr-2"></i>Headers
+                                            <i class="fas fa-chevron-down ml-2 text-xs" id="headers-icon-${index}"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                
+                                ${result.parameters && Object.keys(result.parameters).length > 0 ? `
+                                    <div id="params-${index}" class="hidden mt-3">
+                                        <div class="bg-gray-50 rounded p-3 text-sm">
+                                            <pre class="whitespace-pre-wrap">${JSON.stringify(result.parameters, null, 2)}</pre>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${result.form_data && Object.keys(result.form_data).length > 0 ? `
+                                    <div id="form-${index}" class="hidden mt-3">
+                                        <div class="bg-gray-50 rounded p-3 text-sm">
+                                            <pre class="whitespace-pre-wrap">${JSON.stringify(result.form_data, null, 2)}</pre>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${result.headers && Object.keys(result.headers).length > 0 ? `
+                                    <div id="headers-${index}" class="hidden mt-3">
+                                        <div class="bg-gray-50 rounded p-3 text-sm">
+                                            <pre class="whitespace-pre-wrap">${JSON.stringify(result.headers, null, 2)}</pre>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async exportResults() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/export?format=json`);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `scan-${this.scanId}-results.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        this.showToast('Results exported successfully', 'success');
+                    } else {
+                        this.showToast('Error exporting results', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error exporting results:', error);
+                    this.showToast('Error exporting results', 'error');
+                }
+            }
+
+            async apiCall(endpoint, options = {}) {
+                const url = '/api' + endpoint;
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Include cookies for session-based auth
+                    ...options,
+                };
+
+                // Add Authorization header if token is available
+                if (this.token) {
+                    config.headers['Authorization'] = `Bearer ${this.token}`;
+                }
+
+                const response = await fetch(url, config);
+                
+                // Debug logging
+                console.log(`API call to ${url} returned status: ${response.status}`);
+                
+                // Handle authentication errors globally - redirect immediately
+                if (response.status === 401) {
+                    console.log('Session expired, redirecting to login');
+                    // Redirect immediately without delay
+                    window.location.href = '/';
+                    return response;
+                }
+                
+                return response;
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                const bgColor = type === 'success' ? 'bg-green-500' : 
+                               type === 'error' ? 'bg-red-500' : 
+                               type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
+                
+                toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 transition-all duration-300 transform translate-x-full`;
+                toast.textContent = message;
+                
+                const container = document.getElementById('toastContainer');
+                container.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (container.contains(toast)) {
+                            container.removeChild(toast);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+
+
+            async loadParameters() {
+                try {
+                    console.log('Loading parameters for scan:', this.scanId);
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/parameters`);
+                    console.log('Parameters API response:', response.status, response.ok);
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Parameters data:', data);
+                        this.parameters = data.parameters || [];
+                        console.log('Parameters array:', this.parameters);
+                        this.displayParameters();
+                        this.updateParametersCount();
+                    } else {
+                        console.error('Failed to load parameters:', response.status);
+                        this.showToast('Error loading parameters', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading parameters:', error);
+                    this.showToast('Error loading parameters', 'error');
+                }
+            }
+
+            displayParameters() {
+                console.log('displayParameters called with parameters:', this.parameters);
+                const container = document.getElementById('parametersList');
+                console.log('Parameters container:', container);
+                if (!container) {
+                    console.error('Parameters container not found');
+                    return;
+                }
+
+                if (this.parameters.length === 0) {
+                    console.log('No parameters to display');
+                    container.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-list text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-500">No parameters found</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                console.log('Displaying', this.parameters.length, 'parameters');
+                container.innerHTML = this.parameters.map(param => `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-tag text-purple-600 mr-3"></i>
+                                <span class="font-mono text-sm text-gray-900">${param}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                console.log('Parameters displayed successfully');
+            }
+
+            updateParametersCount() {
+                const countElement = document.getElementById('parametersCount');
+                if (countElement) {
+                    countElement.textContent = this.parameters ? this.parameters.length : 0;
+                }
+            }
+
+            async exportParameters() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/parameters`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const parameters = data.parameters || [];
+                        
+                        // Create text content
+                        const textContent = parameters.join('\n');
+                        
+                        // Create and download file
+                        const blob = new Blob([textContent], { type: 'text/plain' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `scan-${this.scanId}-parameters.txt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        this.showToast('Parameters exported successfully', 'success');
+                    } else {
+                        this.showToast('Error exporting parameters', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error exporting parameters:', error);
+                    this.showToast('Error exporting parameters', 'error');
+                }
+            }
+
+            async exportURLs() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/urls`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const urls = data.urls || [];
+                        
+                        // Create text content
+                        const textContent = urls.join('\n');
+                        
+                        // Create and download file
+                        const blob = new Blob([textContent], { type: 'text/plain' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `scan-${this.scanId}-urls.txt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        this.showToast('URLs exported successfully', 'success');
+                    } else {
+                        this.showToast('Error exporting URLs', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error exporting URLs:', error);
+                    this.showToast('Error exporting URLs', 'error');
+                }
+            }
+
+            async startParameterFuzzing() {
+                try {
+                    console.log('Starting parameter fuzzing for scan:', this.scanId);
+                    
+                    // Show loading state
+                    document.getElementById('fuzzingStatus').classList.remove('hidden');
+                    document.getElementById('fuzzingResults').classList.add('hidden');
+                    document.getElementById('startFuzzingBtn').disabled = true;
+                    document.getElementById('startFuzzingBtn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Fuzzing...';
+                    
+                    // Show stop button and hide start button
+                    document.getElementById('stopFuzzingBtn').classList.remove('hidden');
+                    document.getElementById('startFuzzingBtn').classList.add('hidden');
+                    
+                    // Show progress bar
+                    document.getElementById('fuzzingProgressContainer').classList.remove('hidden');
+                    this.updateFuzzingProgress(0, 'Initializing parameter fuzzing...');
+                    
+                    // Update status badge
+                    const statusBadge = document.getElementById('fuzzingStatus');
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Running';
+                        statusBadge.className = 'ml-auto bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full';
+                    }
+                    
+                    const chunkSizeEl = document.getElementById('chunkSizeInput');
+                    const cs = chunkSizeEl ? parseInt(chunkSizeEl.value || '500') : 500;
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/fuzz?chunk_size=${cs}`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        this.showToast('Parameter fuzzing started successfully', 'success');
+                        this.updateFuzzingProgress(0, 'Fuzzing request sent, starting parameter discovery...');
+                        
+                        // Set fuzzing as active and start polling
+                        this.isFuzzingActive = true;
+                        const timeoutId = setTimeout(() => {
+                            this.checkFuzzingStatus();
+                        }, 2000);
+                        this.pollingTimeouts.push(timeoutId);
+                    } else {
+                        this.showToast('Error starting parameter fuzzing', 'error');
+                        this.resetFuzzingUI();
+                    }
+                } catch (error) {
+                    console.error('Error starting parameter fuzzing:', error);
+                    this.showToast('Error starting parameter fuzzing', 'error');
+                    this.resetFuzzingUI();
+                }
+            }
+
+            async stopParameterFuzzing() {
+                try {
+                    console.log('Stopping parameter fuzzing for scan:', this.scanId);
+                    
+                    // Show confirmation dialog
+                    if (!confirm('Are you sure you want to stop the parameter fuzzing process?')) {
+                        return;
+                    }
+                    
+                    // Make API call to stop fuzzing (we'll need to implement this endpoint)
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/fuzz/stop`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        this.showToast('Parameter fuzzing stopped successfully', 'success');
+                        this.clearAllPolling(); // Stop all polling
+                        this.resetFuzzingUI();
+                    } else {
+                        this.showToast('Error stopping parameter fuzzing', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error stopping parameter fuzzing:', error);
+                    this.showToast('Error stopping parameter fuzzing', 'error');
+                }
+            }
+
+            async checkFuzzingStatus() {
+                try {
+                    // Check if fuzzing is still active before making API calls
+                    if (!this.isFuzzingActive) {
+                        console.log('Fuzzing is not active, stopping status checks');
+                        return;
+                    }
+                    
+                    // Authentication is now handled by the apiCall method
+                    
+                    // First check the real progress
+                    const progressResponse = await this.apiCall(`/scanner/scans/${this.scanId}/fuzz/progress`);
+                    if (progressResponse.ok) {
+                        const progressData = await progressResponse.json();
+                        
+                        // Update progress with real data
+                        this.updateFuzzingProgress(
+                            progressData.percentage, 
+                            progressData.message,
+                            progressData.discovered,
+                            progressData.current,
+                            progressData.total
+                        );
+                        
+                        // Check if fuzzing is completed
+                        if (progressData.stage === 'completed' || progressData.percentage >= 100) {
+                            // Check for hidden URLs to see if we have results
+                            const response = await this.apiCall(`/scanner/scans/${this.scanId}/hidden-urls`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.total_count > 0) {
+                                    this.updateFuzzingProgress(100, 'Fuzzing completed successfully!', progressData.discovered);
+                                    setTimeout(() => {
+                                        this.showFuzzingResults();
+                                    }, 1000);
+                                } else {
+                                    // Fuzzing completed but no parameters found
+                                    this.updateFuzzingProgress(100, 'Fuzzing completed - no parameters discovered', 0);
+                                    setTimeout(() => {
+                                        this.showFuzzingResults();
+                                    }, 1000);
+                                }
+                            }
+                        } else if (progressData.stage === 'aborted') {
+                            // Fuzzing was aborted
+                            this.updateFuzzingProgress(100, 'Fuzzing aborted: ' + progressData.message, 0);
+                            setTimeout(() => {
+                                this.resetFuzzingUI();
+                            }, 2000);
+                        } else {
+                            // Keep polling if still in progress and fuzzing is active
+                            if (this.isFuzzingActive) {
+                                const timeoutId = setTimeout(() => {
+                                this.checkFuzzingStatus();
+                            }, 2000); // Poll every 2 seconds
+                                this.pollingTimeouts.push(timeoutId);
+                            }
+                        }
+                    } else {
+                        // Check if it's an authentication error
+                        if (progressResponse.status === 401) {
+                            console.log('Authentication failed, stopping fuzzing status checks');
+                            this.clearAllPolling();
+                            this.resetFuzzingUI();
+                            return;
+                        }
+                        
+                        // Fallback to old method if progress endpoint fails
+                        this.updateFuzzingProgress(60, 'Checking for discovered parameters...');
+                        
+                        const response = await this.apiCall(`/scanner/scans/${this.scanId}/hidden-urls`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.total_count > 0) {
+                                this.updateFuzzingProgress(90, 'Parameters discovered, analyzing reflections...');
+                                setTimeout(() => {
+                                    this.showFuzzingResults();
+                                }, 1000);
+                            } else {
+                                if (this.isFuzzingActive) {
+                                    const timeoutId = setTimeout(() => {
+                                    this.checkFuzzingStatus();
+                                }, 3000);
+                                    this.pollingTimeouts.push(timeoutId);
+                                }
+                            }
+                        } else {
+                            // Check if it's an authentication error
+                            if (response.status === 401) {
+                                console.log('Authentication failed, stopping fuzzing status checks');
+                                this.clearAllPolling();
+                                this.resetFuzzingUI();
+                                return;
+                            }
+                            
+                            if (this.isFuzzingActive) {
+                                const timeoutId = setTimeout(() => {
+                                this.checkFuzzingStatus();
+                            }, 3000);
+                                this.pollingTimeouts.push(timeoutId);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking fuzzing status:', error);
+                    this.updateFuzzingProgress(30, 'Error occurred, retrying...');
+                    if (this.isFuzzingActive) {
+                        const timeoutId = setTimeout(() => {
+                        this.checkFuzzingStatus();
+                    }, 3000);
+                        this.pollingTimeouts.push(timeoutId);
+                    }
+                }
+            }
+
+            showFuzzingResults() {
+                // Complete progress
+                this.updateFuzzingProgress(100, 'Fuzzing completed successfully!');
+                
+                // Stop all polling
+                this.clearAllPolling();
+                
+                // Hide loading state
+                document.getElementById('fuzzingStatus').classList.add('hidden');
+                document.getElementById('fuzzingResults').classList.remove('hidden');
+                
+                // Reset button states
+                document.getElementById('startFuzzingBtn').disabled = false;
+                document.getElementById('startFuzzingBtn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Fuzzing';
+                
+                // Show start button and hide stop button
+                document.getElementById('startFuzzingBtn').classList.remove('hidden');
+                document.getElementById('stopFuzzingBtn').classList.add('hidden');
+                
+                // Hide progress bar
+                document.getElementById('fuzzingProgressContainer').classList.add('hidden');
+                
+                // Update status badge
+                const statusBadge = document.getElementById('fuzzingStatus');
+                if (statusBadge) {
+                    statusBadge.textContent = 'Completed';
+                    statusBadge.className = 'ml-auto bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full';
+                }
+                
+                // Set fuzzing as inactive
+                this.isFuzzingActive = false;
+                
+                this.showToast('Parameter fuzzing completed', 'success');
+            }
+
+            clearAllPolling() {
+                console.log('Clearing all polling timeouts and intervals');
+                this.isFuzzingActive = false;
+                
+                // Clear all tracked timeouts
+                this.pollingTimeouts.forEach(timeoutId => {
+                    clearTimeout(timeoutId);
+                });
+                this.pollingTimeouts = [];
+                
+                // Clear any intervals
+                if (this.pollingInterval) {
+                    clearInterval(this.pollingInterval);
+                    this.pollingInterval = null;
+                }
+            }
+
+            resetFuzzingUI() {
+                // Stop all polling
+                this.clearAllPolling();
+                
+                document.getElementById('fuzzingStatus').classList.add('hidden');
+                document.getElementById('startFuzzingBtn').disabled = false;
+                document.getElementById('startFuzzingBtn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Fuzzing';
+                
+                // Show start button and hide stop button
+                document.getElementById('startFuzzingBtn').classList.remove('hidden');
+                document.getElementById('stopFuzzingBtn').classList.add('hidden');
+                
+                // Hide progress bar
+                document.getElementById('fuzzingProgressContainer').classList.add('hidden');
+                
+                const statusBadge = document.getElementById('fuzzingStatus');
+                if (statusBadge) {
+                    statusBadge.textContent = 'Ready';
+                    statusBadge.className = 'ml-auto bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full';
+                }
+            }
+
+            updateFuzzingProgress(percentage, status, discovered = null, current = null, total = null) {
+                const progressBar = document.getElementById('fuzzingProgressBar');
+                const progressText = document.getElementById('fuzzingProgressText');
+                const progressStatus = document.getElementById('fuzzingProgressStatus');
+                const progressUrls = document.getElementById('fuzzingProgressUrls');
+                
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+                
+                if (progressText) {
+                    progressText.textContent = percentage + '%';
+                }
+                
+                if (progressStatus) {
+                    // Hide the status message - only show URL count
+                    progressStatus.textContent = '';
+                }
+                
+                // Display URL count information
+                if (progressUrls) {
+                    if (current !== null && total !== null && total > 0) {
+                        progressUrls.textContent = `Processing URL ${current}/${total}`;
+                    } else {
+                        progressUrls.textContent = '';
+                    }
+                }
+            }
+
+            async checkFuzzingStatusOnLoad() {
+                try {
+                    console.log('Checking fuzzing status on page load for scan:', this.scanId);
+                    
+                    // Check if fuzzing is currently running
+                    const progressResponse = await this.apiCall(`/scanner/scans/${this.scanId}/fuzz/progress`);
+                    if (progressResponse.ok) {
+                        const progressData = await progressResponse.json();
+                        console.log('Fuzzing status on load:', progressData);
+                        
+                        // If fuzzing is running (not completed or aborted), update UI
+                        if (progressData.stage !== 'completed' && progressData.stage !== 'aborted' && progressData.stage !== 'not_started') {
+                            console.log('Fuzzing is running, updating UI to show stop button');
+                            
+                            // Set fuzzing as active
+                            this.isFuzzingActive = true;
+                            
+                            // Show stop button and hide start button
+                            document.getElementById('stopFuzzingBtn').classList.remove('hidden');
+                            document.getElementById('startFuzzingBtn').classList.add('hidden');
+                            
+                            // Show progress bar
+                            document.getElementById('fuzzingProgressContainer').classList.remove('hidden');
+                            
+                            // Update progress
+                            this.updateFuzzingProgress(
+                                progressData.percentage, 
+                                progressData.message,
+                                progressData.discovered,
+                                progressData.current,
+                                progressData.total
+                            );
+                            
+                            // Update status badge
+                            const statusBadge = document.getElementById('fuzzingStatus');
+                            if (statusBadge) {
+                                statusBadge.textContent = 'Running';
+                                statusBadge.className = 'ml-auto bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full';
+                            }
+                            
+                            // Start polling for updates
+                            const timeoutId = setTimeout(() => {
+                                this.checkFuzzingStatus();
+                            }, 2000);
+                            this.pollingTimeouts.push(timeoutId);
+                        } else if (progressData.stage === 'completed') {
+                            console.log('Fuzzing is completed on page load, showing results');
+                            // Fuzzing is completed, show the results
+                            this.showFuzzingResults();
+                        } else {
+                            console.log('Fuzzing is not running on page load, not starting polling');
+                            // Ensure fuzzing is marked as inactive and clear any existing polling
+                            this.clearAllPolling();
+                        }
+                    } else {
+                        console.log('Failed to get fuzzing status on load (status:', progressResponse.status, '), not starting polling');
+                        // If we can't get the status, don't start polling
+                        this.clearAllPolling();
+                    }
+                } catch (error) {
+                    console.error('Error checking fuzzing status on load:', error);
+                    // If there's an error, don't start polling
+                    this.clearAllPolling();
+                }
+            }
+
+            async downloadReport(type) {
+                try {
+                    // Use the correct endpoint for downloading reports
+                    const endpoint = type === 'hidden-urls' ? 
+                        `/scanner/scans/${this.scanId}/hidden-urls/export` : 
+                        `/scanner/scans/${this.scanId}/export`;
+                    
+                    const response = await this.apiCall(endpoint);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${type}_report.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        this.showToast(`${type.toUpperCase()} report downloaded successfully`, 'success');
+                    } else {
+                        this.showToast(`Error downloading ${type} report`, 'error');
+                    }
+                } catch (error) {
+                    console.error(`Error downloading ${type} report:`, error);
+                    this.showToast(`Error downloading ${type} report`, 'error');
+                }
+            }
+
+            async loadHiddenUrls() {
+                try {
+                    console.log('Loading hidden URLs for scan:', this.scanId);
+                    
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/hidden-urls`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.displayHiddenUrls(data);
+                    } else {
+                        console.log('No hidden URLs found or error loading them');
+                        this.displayHiddenUrls({ get_urls: [], post_urls: [] });
+                    }
+                } catch (error) {
+                    console.error('Error loading hidden URLs:', error);
+                    this.displayHiddenUrls({ get_urls: [], post_urls: [] });
+                }
+            }
+
+            displayHiddenUrls(data) {
+                const getUrls = data.get_urls || [];
+                const postUrls = data.post_urls || [];
+                
+                // Update counts
+                document.getElementById('getHiddenCount').textContent = getUrls.length;
+                document.getElementById('postHiddenCount').textContent = postUrls.length;
+                document.getElementById('getHiddenBadge').textContent = getUrls.length;
+                document.getElementById('postHiddenBadge').textContent = postUrls.length;
+                
+                // Update sidebar count
+                const totalHidden = getUrls.length + postUrls.length;
+                document.getElementById('hiddenUrlsCount').textContent = totalHidden;
+                
+                // Display GET hidden URLs
+                this.displayHiddenUrlsList('getHiddenUrls', getUrls, 'GET');
+                
+                // Display POST hidden URLs
+                this.displayHiddenUrlsList('postHiddenUrls', postUrls, 'POST');
+            }
+
+            displayHiddenUrlsList(containerId, urls, type) {
+                const container = document.getElementById(containerId);
+                
+                if (urls.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                            <p>No hidden ${type} URLs found yet. Run parameter fuzzing to discover hidden parameters.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const urlsHtml = urls.map((urlData, index) => {
+                    const url = urlData.url || urlData;
+                    const status = urlData.status || 'Unknown';
+                    const statusColor = this.getStatusColor(status);
+                    
+                    return `
+                        <div class="border border-gray-200 rounded-lg p-4 mb-3 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+                                            ${status}
+                                        </span>
+                                        <span class="ml-2 text-xs text-gray-500">${type}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-900 break-all font-mono">${url}</p>
+                                    ${urlData.parameters && urlData.parameters.length > 0 ? `
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-600 mb-1">Hidden Parameters:</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                ${urlData.parameters.map(param => 
+                                                    `<span class="inline-flex items-center px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">${param}</span>`
+                                                ).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${urlData.reflected_parameters && urlData.reflected_parameters.length > 0 ? `
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-600 mb-1">Reflected Parameters:</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                ${urlData.reflected_parameters.map(param => 
+                                                    `<span class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800">${param}</span>`
+                                                ).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div class="ml-4 flex-shrink-0">
+                                    <button type="button" data-url="${url}" onclick="copyToClipboard(this.dataset.url)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                container.innerHTML = urlsHtml;
+            }
+
+            getStatusColor(status) {
+                const statusMap = {
+                    '200': 'bg-green-100 text-green-800',
+                    '201': 'bg-green-100 text-green-800',
+                    '202': 'bg-green-100 text-green-800',
+                    '204': 'bg-green-100 text-green-800',
+                    '301': 'bg-yellow-100 text-yellow-800',
+                    '302': 'bg-yellow-100 text-yellow-800',
+                    '400': 'bg-red-100 text-red-800',
+                    '401': 'bg-red-100 text-red-800',
+                    '403': 'bg-red-100 text-red-800',
+                    '404': 'bg-gray-100 text-gray-800',
+                    '500': 'bg-red-100 text-red-800',
+                    'Unknown': 'bg-gray-100 text-gray-800'
+                };
+                return statusMap[status] || 'bg-gray-100 text-gray-800';
+            }
+
+            async exportHiddenUrls() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/hidden-urls/export`);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `hidden_urls_${this.scanId}.txt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        this.showToast('Hidden URLs exported successfully', 'success');
+                    } else {
+                        this.showToast('Error exporting hidden URLs', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error exporting hidden URLs:', error);
+                    this.showToast('Error exporting hidden URLs', 'error');
+                }
+            }
+
+            logout() {
+                // Call logout API to invalidate session
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                }).then(() => {
+                    // Clear token from localStorage
+                localStorage.removeItem('vidusec_token');
+                window.location.href = '/';
+                }).catch(() => {
+                    // Clear token from localStorage even if logout fails
+                    localStorage.removeItem('vidusec_token');
+                    window.location.href = '/';
+                });
+            }
+
+            // Axiom Scan Methods
+            async startAxiomScan() {
+                try {
+                    console.log('Starting Axiom scan for scan:', this.scanId);
+                    
+                    // Show progress UI
+                    document.getElementById('axiomScanProgress').classList.remove('hidden');
+                    document.getElementById('axiomResults').classList.add('hidden');
+                    document.getElementById('noAxiomResults').classList.add('hidden');
+                    document.getElementById('startAxiomScanBtn').disabled = true;
+                    document.getElementById('startAxiomScanBtn').innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Scanning...';
+                    
+                    this.updateAxiomProgress(0, 'Preparing Axiom scan...');
+                    
+                    // Start Axiom scan
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/axiom-scan`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            scan_uuid: this.scanId
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        this.showToast('Axiom scan started successfully', 'success');
+                        this.updateAxiomProgress(10, 'Axiom scan started, processing URLs...');
+                        
+                        // Start polling for results
+                        this.pollAxiomStatus();
+                    } else {
+                        this.showToast('Error starting Axiom scan', 'error');
+                        this.resetAxiomScanUI();
+                    }
+                } catch (error) {
+                    console.error('Error starting Axiom scan:', error);
+                    this.showToast('Error starting Axiom scan', 'error');
+                    this.resetAxiomScanUI();
+                }
+            }
+
+            async pollAxiomStatus() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/axiom-scan/status`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.status === 'scanning') {
+                            this.updateAxiomProgress(data.progress || 50, data.message || 'Axiom scan in progress...');
+                            // Continue polling
+                            setTimeout(() => this.pollAxiomStatus(), 3000);
+                        } else if (data.status === 'completed') {
+                            this.updateAxiomProgress(100, 'Axiom scan completed!');
+                            setTimeout(() => {
+                                this.loadAxiomResults();
+                            }, 1000);
+                        } else if (data.status === 'error') {
+                            this.showToast('Axiom scan failed: ' + (data.error || 'Unknown error'), 'error');
+                            this.resetAxiomScanUI();
+                        }
+                    } else {
+                        this.showToast('Error checking Axiom scan status', 'error');
+                        this.resetAxiomScanUI();
+                    }
+                } catch (error) {
+                    console.error('Error polling Axiom status:', error);
+                    this.updateAxiomProgress(75, 'Checking results...');
+                    setTimeout(() => this.pollAxiomStatus(), 3000);
+                }
+            }
+
+            async loadAxiomResults() {
+                try {
+                    const response = await this.apiCall(`/scanner/scans/${this.scanId}/axiom-scan/results`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.displayAxiomResults(data.results);
+                        
+                        // Hide progress and show results
+                        document.getElementById('axiomScanProgress').classList.add('hidden');
+                        document.getElementById('axiomResults').classList.remove('hidden');
+                        document.getElementById('noAxiomResults').classList.add('hidden');
+                        
+                        this.resetAxiomScanUI();
+                        this.showToast('Axiom scan completed', 'success');
+                    } else {
+                        this.showToast('Error loading Axiom results', 'error');
+                        this.resetAxiomScanUI();
+                    }
+                } catch (error) {
+                    console.error('Error loading Axiom results:', error);
+                    this.showToast('Error loading Axiom results', 'error');
+                    this.resetAxiomScanUI();
+                }
+            }
+
+            displayAxiomResults(results) {
+                const container = document.getElementById('axiomResultsContent');
+                const countEl = document.getElementById('axiomResultsCount');
+
+                const safeDecode = (u) => {
+                    try { return decodeURIComponent(u); } catch { return u; }
+                };
+                const getUrl = (r) => r.url || '';
+
+                const total = Array.isArray(results) ? results.length : 0;
+                if (countEl) countEl.textContent = String(total);
+
+                if (!results || results.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-shield-alt text-4xl text-green-400 mb-4"></i>
+                            <p class="text-gray-500">No XSS vulnerabilities found! The application appears to be secure.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = results.map((result) => {
+                    const encodedUrl = getUrl(result) || '';
+                    const decodedUrl = safeDecode(encodedUrl);
+                    const rawLine = result.result || encodedUrl;
+
+                    return `
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2">XSS</span>
+                                    <a href="${decodedUrl}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 hover:underline break-all">${decodedUrl}</a>
+                                </div>
+                                <div class="text-xs text-gray-500 mb-1">Encoded</div>
+                                <div class="text-sm text-gray-800 font-mono bg-gray-50 p-2 rounded break-all">${rawLine}</div>
+                            </div>
+                            <div class="ml-4 flex-shrink-0">
+                                <button type="button" data-url="${decodedUrl}" onclick="copyToClipboard(this.dataset.url)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Copy decoded URL">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            updateAxiomProgress(percentage, status) {
+                const progressBar = document.getElementById('axiomProgressBar');
+                const statusText = document.getElementById('axiomProgressText');
+                const percentText = document.getElementById('axiomProgressPercent');
+                
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+                
+                if (statusText) {
+                    statusText.textContent = status;
+                }
+                
+                if (percentText) {
+                    percentText.textContent = percentage + '%';
+                }
+            }
+
+            resetAxiomScanUI() {
+                document.getElementById('startAxiomScanBtn').disabled = false;
+                document.getElementById('startAxiomScanBtn').innerHTML = '<i class="fas fa-play mr-1"></i>Start Axiom Scan';
+            }
+        }
+
+        // Global logout function
+        function logout() {
+            // Call logout API to invalidate session
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+            }).then(() => {
+            window.location.href = '/';
+            }).catch(() => {
+                window.location.href = '/';
+            });
+        }
+
+        // Global functions
+        function showSection(section) {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.showSection(section);
+            }
+        }
+
+
+        function exportParameters() {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.exportParameters();
+            }
+        }
+
+        function exportURLs() {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.exportURLs();
+            }
+        }
+
+        function startParameterFuzzing() {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.startParameterFuzzing();
+            }
+        }
+
+        function stopParameterFuzzing() {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.stopParameterFuzzing();
+            }
+        }
+
+        function downloadReport(type) {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.downloadReport(type);
+            }
+        }
+
+        function refreshHiddenUrls() {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.loadHiddenUrls();
+            }
+        }
+
+        function exportHiddenUrls() {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.exportHiddenUrls();
+            }
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function() {
+                    window.scanResultsApp?.showToast('URL copied to clipboard', 'success');
+                }).catch(function() {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        // Global function for fallback copy
+        function fallbackCopy(t) {
+            const ta = document.createElement('textarea');
+            ta.value = t;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            document.body.removeChild(ta);
+            window.getSelection && window.getSelection().removeAllRanges && window.getSelection().removeAllRanges();
+            window.scanResultsApp?.showToast(ok ? 'URL copied to clipboard' : 'Failed to copy URL', ok ? 'success' : 'error');
+        }
+
+        // Global function to show sections
+        function showSection(section) {
+            if (window.scanResultsApp) {
+                window.scanResultsApp.showSection(section);
+            }
+        }
+
+        // Global function to toggle details sections
+        function toggleDetails(elementId) {
+            const element = document.getElementById(elementId);
+            const iconId = elementId.replace('params-', 'params-icon-').replace('form-', 'form-icon-').replace('headers-', 'headers-icon-');
+            const icon = document.getElementById(iconId);
+            
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
+            } else {
+                element.classList.add('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            }
+        }
+
+        // Initialize scan results when page loads
+        const scanResults = new ScanResults();
+        window.scanResultsApp = scanResults; // Make it globally accessible
+
+        // Add event listener for Axiom scan button
+        document.addEventListener('DOMContentLoaded', () => {
+            const startAxiomScanBtn = document.getElementById('startAxiomScanBtn');
+            if (startAxiomScanBtn) {
+                startAxiomScanBtn.addEventListener('click', () => {
+                    if (window.scanResultsApp) {
+                        window.scanResultsApp.startAxiomScan();
+                    }
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
