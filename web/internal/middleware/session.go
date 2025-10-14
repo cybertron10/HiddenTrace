@@ -19,7 +19,7 @@ func SessionRequired(sessionService *session.Service) gin.HandlerFunc {
 		sessionID, err := c.Cookie("JSESSIONID")
 		if err != nil {
 			// If no session cookie, redirect to login page
-			c.Redirect(http.StatusFound, "/")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
@@ -30,7 +30,7 @@ func SessionRequired(sessionService *session.Service) gin.HandlerFunc {
 			// Clear invalid session cookie
 			ClearSessionCookie(c)
 			// If session is invalid or expired, redirect to login page
-			c.Redirect(http.StatusFound, "/")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
@@ -68,7 +68,7 @@ func SessionRequiredAPI(sessionService *session.Service) gin.HandlerFunc {
 			log.Printf("SessionRequiredAPI: No JSESSIONID cookie found for %s", c.Request.URL.Path)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Session required",
-				"redirect": "/",
+				"redirect": "/login",
 			})
 			c.Abort()
 			return
@@ -83,7 +83,7 @@ func SessionRequiredAPI(sessionService *session.Service) gin.HandlerFunc {
 			// If session is invalid or expired, return 401 for API calls
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid or expired session",
-				"redirect": "/",
+				"redirect": "/login",
 			})
 			c.Abort()
 			return
@@ -249,7 +249,7 @@ func SessionAndAuthRequired(sessionService *session.Service, authService *auth.S
 			log.Printf("SessionAndAuthRequired: No JSESSIONID cookie found for %s", c.Request.URL.Path)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Session required",
-				"redirect": "/",
+				"redirect": "/login",
 			})
 			c.Abort()
 			return
@@ -263,7 +263,7 @@ func SessionAndAuthRequired(sessionService *session.Service, authService *auth.S
 			c.SetCookie("JSESSIONID", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid or expired session",
-				"redirect": "/",
+				"redirect": "/login",
 			})
 			c.Abort()
 			return

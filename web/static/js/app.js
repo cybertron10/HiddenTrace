@@ -223,7 +223,7 @@ class HiddenTraceApp {
             this.isRedirecting = true;
             // Small delay to allow toast to show
             setTimeout(() => {
-                window.location.href = '/';
+                window.location.href = '/login';
             }, 1000);
         }
     }

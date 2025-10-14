@@ -94,7 +94,11 @@ func setupRoutes(r *gin.Engine, apiHandler *api.Handler, authService *auth.Servi
                 return
             }
         }
-        c.Redirect(http.StatusFound, "/login")
+        // Show the login page instead of redirecting
+        c.HTML(http.StatusOK, "index.html", gin.H{
+            "title": "HiddenTrace - Login",
+            "nonce": middleware.GetNonce(c),
+        })
     })
 
     // Login page (public): show landing/index
