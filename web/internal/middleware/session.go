@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"vidusec/web/internal/auth"
-	"vidusec/web/internal/session"
+	"HiddenTrace/web/internal/auth"
+	"HiddenTrace/web/internal/session"
 
 	"github.com/gin-gonic/gin"
 )

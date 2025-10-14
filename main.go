@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"vidusec/internal/enhancedCrawler"
-	"vidusec/internal/enhancedParamExtractor"
-	"vidusec/internal/scanningData"
+	"HiddenTrace/internal/enhancedCrawler"
+	"HiddenTrace/internal/enhancedParamExtractor"
+	"HiddenTrace/internal/scanningData"
 )
 
 func main() {
@@ -51,7 +51,7 @@ func runCrawl() {
 	args := fs.Args()
 	if len(args) != 1 {
 		fmt.Fprintln(os.Stderr, "Error: URL is required")
-		fmt.Fprintln(os.Stderr, "Usage: vidusec crawl [flags] <URL>")
+		fmt.Fprintln(os.Stderr, "Usage: HiddenTrace crawl [flags] <URL>")
 		fs.PrintDefaults()
 		os.Exit(1)
 	}
@@ -236,10 +236,10 @@ func parseHeadersFromFile(filename string) (map[string]string, error) {
 }
 
 func printUsage() {
-	fmt.Fprintln(os.Stderr, "ViduSec - Integrated Security Tools")
+	fmt.Fprintln(os.Stderr, "HiddenTrace - Integrated Security Tools")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  vidusec crawl [flags] <URL>")
+	fmt.Fprintln(os.Stderr, "  HiddenTrace crawl [flags] <URL>")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Commands:")
 	fmt.Fprintln(os.Stderr, "  crawl    Crawl a website to discover URLs")

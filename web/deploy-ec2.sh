@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ViduSec EC2 Deployment Script
-# This script sets up and runs ViduSec on EC2 Ubuntu
+# HiddenTrace EC2 Deployment Script
+# This script sets up and runs HiddenTrace on EC2 Ubuntu
 
-echo "🚀 ViduSec EC2 Deployment Script"
+echo "🚀 HiddenTrace EC2 Deployment Script"
 echo "================================="
 
 # Update system
@@ -33,14 +33,14 @@ if ! command -v curl &> /dev/null; then
 fi
 
 # Clone or update repository
-if [ -d "vidusec" ]; then
+if [ -d "HiddenTrace" ]; then
     echo "📁 Updating existing repository..."
-    cd vidusec
+    cd HiddenTrace
     git pull origin main
 else
     echo "📁 Cloning repository..."
-    git clone https://github.com/cybertron10/vidusec.git
-    cd vidusec
+    git clone https://github.com/cybertron10/HiddenTrace.git
+    cd HiddenTrace
 fi
 
 # Go to web directory
@@ -50,5 +50,5 @@ cd web
 chmod +x build.sh run.sh
 
 # Build and run
-echo "🔨 Building and starting ViduSec..."
+echo "🔨 Building and starting HiddenTrace..."
 ./run.sh

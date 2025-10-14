@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Simple ViduSec Startup Script
+# Simple HiddenTrace Startup Script
 # Minimal version for quick startup
 
 # Load environment variables
@@ -16,11 +16,11 @@ go mod download
 go mod tidy
 
 # Build application
-go build -o vidusec-web web/main.go
+go build -o HiddenTrace-web web/main.go
 
 # Set JWT secret if not set
 export JWT_SECRET=${JWT_SECRET:-"$(openssl rand -base64 64)"}
 
 # Start server
-echo "🚀 Starting ViduSec on ${HOST:-0.0.0.0}:${PORT:-8080}"
-./vidusec-web
+echo "🚀 Starting HiddenTrace on ${HOST:-0.0.0.0}:${PORT:-8080}"
+./HiddenTrace-web

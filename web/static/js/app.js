@@ -1,8 +1,8 @@
 // HiddenTrace Web Application JavaScript
-class ViduSecApp {
+class HiddenTraceApp {
     constructor() {
         this.apiBase = '/api';
-        this.token = localStorage.getItem('vidusec_token'); // Get JWT token
+        this.token = localStorage.getItem('HiddenTrace_token'); // Get JWT token
         this.init();
     }
 
@@ -125,7 +125,7 @@ class ViduSecApp {
             if (response.ok) {
                 this.user = data.user;
                 this.token = data.token; // Store JWT token
-                localStorage.setItem('vidusec_token', this.token); // Store in localStorage
+                localStorage.setItem('HiddenTrace_token', this.token); // Store in localStorage
                 
                 this.hideLoginModal();
                 this.updateUI();
@@ -165,7 +165,7 @@ class ViduSecApp {
             if (response.ok) {
                 this.user = data.user;
                 this.token = data.token; // Store JWT token
-                localStorage.setItem('vidusec_token', this.token); // Store in localStorage
+                localStorage.setItem('HiddenTrace_token', this.token); // Store in localStorage
                 
                 this.hideRegisterModal();
                 this.updateUI();
@@ -197,14 +197,14 @@ class ViduSecApp {
             }
         }).then(() => {
             // Clear token from localStorage
-            localStorage.removeItem('vidusec_token');
+            localStorage.removeItem('HiddenTrace_token');
             this.user = null;
             this.token = null;
             this.updateUI();
             this.showToast('Logged out successfully', 'info');
         }).catch(() => {
             // Clear token from localStorage even if logout fails
-            localStorage.removeItem('vidusec_token');
+            localStorage.removeItem('HiddenTrace_token');
             this.user = null;
             this.token = null;
             this.updateUI();
@@ -350,5 +350,5 @@ class ViduSecApp {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new ViduSecApp();
+    new HiddenTraceApp();
 });

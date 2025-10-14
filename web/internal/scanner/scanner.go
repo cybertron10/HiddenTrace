@@ -20,10 +20,10 @@ import (
 	"sync"
 	"time"
 
-	"vidusec/web/internal/database"
-	"vidusec/internal/enhancedCrawler"
-	"vidusec/internal/paramsmapper"
-	"vidusec/internal/scanningData"
+	"HiddenTrace/web/internal/database"
+	"HiddenTrace/internal/enhancedCrawler"
+	"HiddenTrace/internal/paramsmapper"
+	"HiddenTrace/internal/scanningData"
 	"github.com/google/uuid"
 )
 

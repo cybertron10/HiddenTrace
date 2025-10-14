@@ -1,14 +1,14 @@
-# ViduSec Deployment Guide
+# HiddenTrace Deployment Guide
 
-This guide covers various deployment options for the ViduSec web application.
+This guide covers various deployment options for the HiddenTrace web application.
 
 ## 🚀 Quick Start
 
 ### Local Development
 ```bash
 # Clone the repository
-git clone https://github.com/cybertron10/vidusec.git
-cd vidusec
+git clone https://github.com/cybertron10/HiddenTrace.git
+cd HiddenTrace
 
 # Run the web application
 cd web
@@ -23,8 +23,8 @@ Access at: `http://localhost:8080`
 ### Using Docker Compose (Recommended)
 ```bash
 # Clone and start
-git clone https://github.com/cybertron10/vidusec.git
-cd vidusec
+git clone https://github.com/cybertron10/HiddenTrace.git
+cd HiddenTrace
 docker-compose up -d
 
 # With reverse proxy
@@ -34,14 +34,14 @@ docker-compose --profile proxy up -d
 ### Using Docker directly
 ```bash
 # Build the image
-docker build -t vidusec-web .
+docker build -t HiddenTrace-web .
 
 # Run the container
 docker run -d \
-  --name vidusec-web \
+  --name HiddenTrace-web \
   -p 8080:8080 \
-  -v vidusec_data:/app/data \
-  vidusec-web
+  -v HiddenTrace_data:/app/data \
+  HiddenTrace-web
 ```
 
 ## ☁️ Cloud Deployment
@@ -58,8 +58,8 @@ docker run -d \
 
 3. **Deploy application:**
    ```bash
-   git clone https://github.com/cybertron10/vidusec.git
-   cd vidusec
+   git clone https://github.com/cybertron10/HiddenTrace.git
+   cd HiddenTrace
    docker-compose up -d
    ```
 
@@ -68,11 +68,11 @@ docker run -d \
 ### Google Cloud Run
 ```bash
 # Build and push to Google Container Registry
-gcloud builds submit --tag gcr.io/PROJECT-ID/vidusec-web
+gcloud builds submit --tag gcr.io/PROJECT-ID/HiddenTrace-web
 
 # Deploy to Cloud Run
-gcloud run deploy vidusec-web \
-  --image gcr.io/PROJECT-ID/vidusec-web \
+gcloud run deploy HiddenTrace-web \
+  --image gcr.io/PROJECT-ID/HiddenTrace-web \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated
@@ -90,7 +90,7 @@ gcloud run deploy vidusec-web \
 heroku login
 
 # Create app
-heroku create your-vidusec-app
+heroku create your-HiddenTrace-app
 
 # Set buildpack
 heroku buildpacks:set heroku/go
@@ -136,16 +136,16 @@ The application includes built-in health checks:
 ### Logs
 ```bash
 # Docker logs
-docker logs vidusec-web
+docker logs HiddenTrace-web
 
 # Docker Compose logs
-docker-compose logs -f vidusec-web
+docker-compose logs -f HiddenTrace-web
 ```
 
 ### Database Backup
 ```bash
 # Backup SQLite database
-cp data/vidusec.db backup-$(date +%Y%m%d).db
+cp data/HiddenTrace.db backup-$(date +%Y%m%d).db
 
 # Backup scan files
 tar -czf scans-backup-$(date +%Y%m%d).tar.gz data/scans/
@@ -226,7 +226,7 @@ sudo chown -R 1001:1001 data/
 # Clean Docker cache
 docker system prune -a
 # Rebuild without cache
-docker build --no-cache -t vidusec-web .
+docker build --no-cache -t HiddenTrace-web .
 ```
 
 ### Performance Optimization
@@ -238,7 +238,7 @@ docker build --no-cache -t vidusec-web .
 ## 📞 Support
 
 For deployment issues:
-1. Check the logs: `docker-compose logs vidusec-web`
+1. Check the logs: `docker-compose logs HiddenTrace-web`
 2. Verify environment variables
 3. Check network connectivity
 4. Review security group/firewall rules

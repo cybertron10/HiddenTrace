@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"vidusec/internal/enhancedCrawler"
+	"HiddenTrace/internal/enhancedCrawler"
 )
 
 // EndpointData represents a complete endpoint for XSS scanning

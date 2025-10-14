@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"vidusec/web/internal/api"
-	"vidusec/web/internal/auth"
-	"vidusec/web/internal/database"
-	"vidusec/web/internal/middleware"
-	"vidusec/web/internal/scanner"
-	"vidusec/web/internal/session"
+	"HiddenTrace/web/internal/api"
+	"HiddenTrace/web/internal/auth"
+	"HiddenTrace/web/internal/database"
+	"HiddenTrace/web/internal/middleware"
+	"HiddenTrace/web/internal/scanner"
+	"HiddenTrace/web/internal/session"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	address := host + ":" + port
-	log.Printf("🚀 ViduSec Web Server starting on %s", address)
+	log.Printf("🚀 HiddenTrace Web Server starting on %s", address)
 	log.Fatal(http.ListenAndServe(address, r))
 }
 

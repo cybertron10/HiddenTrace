@@ -47,7 +47,7 @@ fi
 
 # Build the web application
 echo "🔨 Building HiddenTrace web application..."
-if go build -o vidusec-web web/main.go; then
+if go build -o HiddenTrace-web web/main.go; then
     echo "✅ Application built successfully"
 else
     echo "❌ Error: Failed to build application"
@@ -84,8 +84,8 @@ echo ""
 # Run the application with proper error handling
 if [ "$ENVIRONMENT" = "production" ]; then
     echo "🔒 Running in PRODUCTION mode"
-    ./vidusec-web
+    ./HiddenTrace-web
 else
     echo "🛠️  Running in DEVELOPMENT mode"
-    ./vidusec-web
+    ./HiddenTrace-web
 fi

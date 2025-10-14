@@ -14,14 +14,14 @@ go mod tidy
 
 # Build the application
 echo "🔨 Building application..."
-go build -o vidusec-web main.go
+go build -o HiddenTrace-web main.go
 
 if [ $? -eq 0 ]; then
     echo "✅ Build successful!"
-    echo "📁 Binary created: vidusec-web"
+    echo "📁 Binary created: HiddenTrace-web"
     echo ""
     echo "🚀 To run the application:"
-    echo "   ./vidusec-web"
+    echo "   ./HiddenTrace-web"
     echo ""
     echo "🌐 Then open: http://localhost:8080"
 else

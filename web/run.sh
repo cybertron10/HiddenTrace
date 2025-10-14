@@ -5,7 +5,7 @@
 echo "🚀 Starting HiddenTrace Web Application..."
 
 # Check if binary exists
-if [ ! -f "vidusec-web" ]; then
+if [ ! -f "HiddenTrace-web" ]; then
     echo "📦 Binary not found. Building first..."
     ./build.sh
 fi
@@ -25,4 +25,4 @@ echo "Press Ctrl+C to stop the server"
 echo ""
 
 # Run the application
-./vidusec-web
+./HiddenTrace-web

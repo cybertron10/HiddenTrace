@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"vidusec/web/internal/database"
+	"HiddenTrace/web/internal/database"
 )
 
 type Service struct {

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"vidusec/web/internal/auth"
+	"HiddenTrace/web/internal/auth"
 
 	"github.com/gin-gonic/gin"
 )

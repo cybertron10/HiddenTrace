@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"vidusec/web/internal/database"
-	"vidusec/web/internal/session"
+	"HiddenTrace/web/internal/database"
+	"HiddenTrace/web/internal/session"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -56,8 +56,8 @@ var (
 
 const (
 	TokenExpiration = 24 * time.Hour
-	JWTIssuer       = "vidusec"
-	JWTAudience     = "vidusec-api"
+	JWTIssuer       = "HiddenTrace"
+	JWTAudience     = "HiddenTrace-api"
 )
 
 // getJWTSecret returns the JWT secret from environment variable or generates a secure random one

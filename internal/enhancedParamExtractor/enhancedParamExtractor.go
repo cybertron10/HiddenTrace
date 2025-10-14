@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"vidusec/internal/enhancedCrawler"
+	"HiddenTrace/internal/enhancedCrawler"
 )
 
 // ExtractAllParameters extracts parameters from all sources

@@ -393,7 +393,7 @@
                 this.pollingInterval = null; // Track polling interval
                 this.isFuzzingActive = false; // Track if fuzzing is active
                 this.pollingTimeouts = []; // Track all polling timeouts
-                this.token = localStorage.getItem('vidusec_token'); // Get JWT token
+                this.token = localStorage.getItem('HiddenTrace_token'); // Get JWT token
                 this.init();
             }
 
@@ -1468,11 +1468,11 @@
                     }
                 }).then(() => {
                     // Clear token from localStorage
-                localStorage.removeItem('vidusec_token');
+                localStorage.removeItem('HiddenTrace_token');
                 window.location.href = '/';
                 }).catch(() => {
                     // Clear token from localStorage even if logout fails
-                    localStorage.removeItem('vidusec_token');
+                    localStorage.removeItem('HiddenTrace_token');
                     window.location.href = '/';
                 });
             }

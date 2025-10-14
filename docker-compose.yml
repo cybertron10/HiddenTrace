@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  vidusec-web:
+  HiddenTrace-web:
     build: .
     ports:
       - "8080:8080"
@@ -9,7 +9,7 @@ services:
       - PORT=8080
       - NODE_ENV=production
     volumes:
-      - vidusec_data:/app/data
+      - HiddenTrace_data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
@@ -28,11 +28,11 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
-      - vidusec-web
+      - HiddenTrace-web
     restart: unless-stopped
     profiles:
       - proxy
 
 volumes:
-  vidusec_data:
+  HiddenTrace_data:
     driver: local

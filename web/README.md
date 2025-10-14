@@ -1,4 +1,4 @@
-# ViduSec Web Application
+# HiddenTrace Web Application
 
 A full-featured web security scanner with user authentication, database storage, and a modern web interface.
 
@@ -32,7 +32,7 @@ A full-featured web security scanner with user authentication, database storage,
 ## Architecture
 
 ```
-vidusec/web/
+HiddenTrace/web/
 ├── main.go                 # Main application entry point
 ├── internal/
 │   ├── api/               # API handlers
@@ -55,7 +55,7 @@ vidusec/web/
 
 1. **Clone and navigate to the web directory:**
    ```bash
-   cd vidusec/web
+   cd HiddenTrace/web
    ```
 
 2. **Install dependencies:**
@@ -144,7 +144,7 @@ vidusec/web/
 - `JWT_SECRET` - JWT signing secret (default: hardcoded for development)
 
 ### Database
-- SQLite database stored in `data/vidusec.db`
+- SQLite database stored in `data/HiddenTrace.db`
 - Scan files stored in `data/scans/{scan_id}/`
 
 ## Development
@@ -199,16 +199,16 @@ go test -cover ./...
 FROM golang:1.21-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go mod tidy && go build -o vidusec-web main.go
+RUN go mod tidy && go build -o HiddenTrace-web main.go
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
-COPY --from=builder /app/vidusec-web .
+COPY --from=builder /app/HiddenTrace-web .
 COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/static ./static
 EXPOSE 8080
-CMD ["./vidusec-web"]
+CMD ["./HiddenTrace-web"]
 ```
 
 ### Cloud Platforms
@@ -238,4 +238,4 @@ For support and questions:
 
 ---
 
-**ViduSec Web** - Professional web security scanning made simple.
+**HiddenTrace Web** - Professional web security scanning made simple.

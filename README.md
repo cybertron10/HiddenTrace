@@ -1,4 +1,4 @@
-# ViduSec - Web Security Scanner
+# HiddenTrace - Web Security Scanner
 
 A comprehensive web security scanning tool with both command-line interface and modern web application.
 
@@ -28,8 +28,8 @@ A comprehensive web security scanning tool with both command-line interface and 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/cybertron10/vidusec.git
-   cd vidusec
+   git clone https://github.com/cybertron10/HiddenTrace.git
+   cd HiddenTrace
    ```
 
 2. **Install dependencies:**
@@ -39,7 +39,7 @@ A comprehensive web security scanning tool with both command-line interface and 
 
 3. **Build the command-line tool:**
    ```bash
-   go build -o vidusec main.go
+   go build -o HiddenTrace main.go
    ```
 
 4. **Run the web application:**
@@ -54,16 +54,16 @@ A comprehensive web security scanning tool with both command-line interface and 
 ### Basic Crawling
 ```bash
 # Simple crawl
-./vidusec crawl https://example.com
+./HiddenTrace crawl https://example.com
 
 # Advanced crawl with custom parameters
-./vidusec crawl -depth 15 -pages 50000 -output results.txt https://example.com
+./HiddenTrace crawl -depth 15 -pages 50000 -output results.txt https://example.com
 
 # Crawl with custom headers
-./vidusec crawl -headers "Authorization: Bearer token, X-Custom: value" https://example.com
+./HiddenTrace crawl -headers "Authorization: Bearer token, X-Custom: value" https://example.com
 
 # Crawl with headers from file
-./vidusec crawl -headers-file auth.txt https://example.com
+./HiddenTrace crawl -headers-file auth.txt https://example.com
 ```
 
 ### Command Options
@@ -103,7 +103,7 @@ Once running, open your browser and go to `http://localhost:8080`
 
 ### Command Line Tool
 ```
-vidusec/
+HiddenTrace/
 ├── main.go                    # CLI entry point
 ├── internal/
 │   ├── enhancedCrawler/      # Web crawling engine
@@ -114,7 +114,7 @@ vidusec/
 
 ### Web Application
 ```
-vidusec/web/
+HiddenTrace/web/
 ├── main.go                   # Web server entry point
 ├── internal/
 │   ├── api/                 # REST API handlers
@@ -132,11 +132,11 @@ vidusec/web/
 ### Building from Source
 ```bash
 # Build CLI tool
-go build -o vidusec main.go
+go build -o HiddenTrace main.go
 
 # Build web application
 cd web
-go build -o vidusec-web main.go
+go build -o HiddenTrace-web main.go
 ```
 
 ### Running Tests
@@ -176,16 +176,16 @@ JS | https://api.example.com/users | {"id": "123"} | - | {"Content-Type": "appli
 FROM golang:1.21-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go mod tidy && go build -o vidusec-web web/main.go
+RUN go mod tidy && go build -o HiddenTrace-web web/main.go
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
-COPY --from=builder /app/vidusec-web .
+COPY --from=builder /app/HiddenTrace-web .
 COPY --from=builder /app/web/templates ./templates
 COPY --from=builder /app/web/static ./static
 EXPOSE 8080
-CMD ["./vidusec-web"]
+CMD ["./HiddenTrace-web"]
 ```
 
 ### Cloud Platforms
@@ -216,7 +216,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/cybertron10/vidusec/issues)
+- **Issues**: [GitHub Issues](https://github.com/cybertron10/HiddenTrace/issues)
 - **Documentation**: Check the README files in each directory
 - **API Docs**: Available at `/api/docs` when running the web application
 
@@ -231,6 +231,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**ViduSec** - Professional web security scanning made simple and accessible.
+**HiddenTrace** - Professional web security scanning made simple and accessible.
 
 Made with ❤️ by [cybertron10](https://github.com/cybertron10)

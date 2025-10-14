@@ -1,4 +1,4 @@
-# Multi-stage build for ViduSec Web Application
+# Multi-stage build for HiddenTrace Web Application
 FROM golang:1.21-alpine AS builder
 
 # Install git and ca-certificates
@@ -20,7 +20,7 @@ COPY . .
 
 # Build the web application
 WORKDIR /app/web
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o vidusec-web main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o HiddenTrace-web main.go
 
 # Final stage
 FROM alpine:latest
@@ -36,7 +36,7 @@ RUN addgroup -g 1001 -S appgroup && \
 WORKDIR /app
 
 # Copy binary from builder stage
-COPY --from=builder /app/web/vidusec-web .
+COPY --from=builder /app/web/HiddenTrace-web .
 
 # Copy templates and static files
 COPY --from=builder /app/web/templates ./templates
@@ -57,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
 
 # Run the application
-CMD ["./vidusec-web"]
+CMD ["./HiddenTrace-web"]

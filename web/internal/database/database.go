@@ -20,7 +20,7 @@ func Initialize() (*DB, error) {
 	}
 
 	// Open SQLite database
-	db, err := sql.Open("sqlite3", "data/vidusec.db")
+	db, err := sql.Open("sqlite3", "data/HiddenTrace.db")
 	if err != nil {
 		return nil, err
 	}

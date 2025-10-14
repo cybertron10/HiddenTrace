@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"vidusec/web/internal/auth"
-	"vidusec/web/internal/database"
-	"vidusec/web/internal/middleware"
-	"vidusec/web/internal/scanner"
+	"HiddenTrace/web/internal/auth"
+	"HiddenTrace/web/internal/database"
+	"HiddenTrace/web/internal/middleware"
+	"HiddenTrace/web/internal/scanner"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

@@ -282,7 +282,7 @@
             constructor() {
                 this.activeScans = new Set(); // Track scans that are currently running
                 this.pollingInterval = null;
-                this.token = localStorage.getItem('vidusec_token'); // Get JWT token
+                this.token = localStorage.getItem('HiddenTrace_token'); // Get JWT token
                 this.init();
             }
 
@@ -699,12 +699,12 @@
                     }
                 }).then(() => {
                     // Clear token from localStorage
-                localStorage.removeItem('vidusec_token');
+                localStorage.removeItem('HiddenTrace_token');
                 this.stopPolling();
                 window.location.href = '/';
                 }).catch(() => {
                     // Clear token from localStorage even if logout fails
-                    localStorage.removeItem('vidusec_token');
+                    localStorage.removeItem('HiddenTrace_token');
                     this.stopPolling();
                     window.location.href = '/';
                 });
