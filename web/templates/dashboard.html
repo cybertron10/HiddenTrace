@@ -242,7 +242,7 @@
                         <label for="newScanTargetUrl" class="block text-sm font-medium text-gray-700 mb-2">
                             Target URL
                         </label>
-                        <input id="newScanTargetUrl" type="url" required placeholder="https://example.com"
+                        <input id="newScanTargetUrl" type="url" placeholder="https://example.com"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
 
@@ -594,10 +594,11 @@
             }
 
             async submitNewScan() {
-                const targetUrl = document.getElementById('newScanTargetUrl').value;
+                const targetUrl = document.getElementById('newScanTargetUrl').value.trim();
                 const maxDepth = parseInt(document.getElementById('newScanMaxDepth').value);
                 const maxPages = parseInt(document.getElementById('newScanMaxPages').value);
                 const headersText = document.getElementById('newScanHeaders').value;
+                const fileInput = document.getElementById('domainsFile');
 
                 // Parse headers
                 const headers = {};
@@ -609,6 +610,49 @@
                             headers[key.trim()] = valueParts.join(':').trim();
                         }
                     }
+                }
+
+                // Batch mode: if no target URL but a file is selected, run scans for each domain in file
+                if (!targetUrl && fileInput && fileInput.files && fileInput.files.length > 0) {
+                    try {
+                        const text = await fileInput.files[0].text();
+                        const urls = text.split('\n').map(u => u.trim()).filter(u => u);
+                        if (urls.length === 0) {
+                            this.showToast('domains.txt is empty', 'warning');
+                            return;
+                        }
+                        // Limit to avoid accidental huge batches
+                        const MAX_BATCH = 1000;
+                        const batch = urls.slice(0, MAX_BATCH);
+                        let success = 0, fail = 0;
+                        for (const u of batch) {
+                            const resp = await this.apiCall('/scanner/scan', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    target_url: u,
+                                    max_depth: maxDepth,
+                                    max_pages: maxPages,
+                                    headers: headers
+                                })
+                            });
+                            if (resp.ok) { success++; }
+                            else { fail++; }
+                        }
+                        this.hideNewScanModal();
+                        this.showToast(`Batch started: ${success} queued, ${fail} failed`, fail ? 'warning' : 'success');
+                        this.loadScans();
+                        this.loadDashboardData();
+                    } catch (e) {
+                        console.error('Batch start error:', e);
+                        this.showToast('Failed to start batch scans', 'error');
+                    }
+                    return;
+                }
+
+                // Single URL mode
+                if (!targetUrl) {
+                    this.showToast('Enter Target URL or upload domains.txt', 'warning');
+                    return;
                 }
 
                 try {
