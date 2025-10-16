@@ -208,9 +208,6 @@ func setupRoutes(r *gin.Engine, apiHandler *api.Handler, authService *auth.Servi
 				apiHandler.AuthzService.RequireResourceOwnership(getScanOwner), 
 				apiHandler.GetAxiomScanResults)
 			
-			// Upload domains.txt to server
-			scanner.POST("/upload-domains", apiHandler.UploadDomainsFile)
-
 			log.Println("About to create admin group...")
 			// Admin-only routes with centralized authorization
 			admin := scanner.Group("/admin")
