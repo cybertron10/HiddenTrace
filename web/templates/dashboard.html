@@ -246,6 +246,16 @@
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
 
+                    <div class="mb-4">
+                        <label for="domainsFile" class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload domains.txt (optional for batch scanning)
+                        </label>
+                        <input id="domainsFile" type="file" accept=".txt" class="w-full" />
+                        <p class="text-xs text-gray-500 mt-1">A non-empty .txt file with one URL per line.</p>
+                        <button type="button" id="uploadDomainsBtn" class="mt-2 px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm">Upload domains.txt</button>
+                        <span id="uploadDomainsInfo" class="ml-2 text-sm text-gray-600"></span>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label for="newScanMaxDepth" class="block text-sm font-medium text-gray-700 mb-2">
@@ -376,6 +386,11 @@
                 document.getElementById('cancelNewScan').addEventListener('click', () => {
                     this.hideNewScanModal();
                 });
+
+                const uploadBtn = document.getElementById('uploadDomainsBtn');
+                if (uploadBtn) {
+                    uploadBtn.addEventListener('click', () => this.uploadDomains());
+                }
 
                 // Close new scan modal when clicking outside
                 document.getElementById('newScanModal').addEventListener('click', (e) => {
@@ -618,6 +633,36 @@
                 } catch (error) {
                     console.error('Error starting scan:', error);
                     this.showToast('Error starting scan', 'error');
+                }
+            }
+
+            // Upload domains.txt for batch scans
+            async uploadDomains() {
+                const fileInput = document.getElementById('domainsFile');
+                const info = document.getElementById('uploadDomainsInfo');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    this.showToast('Please choose a .txt file to upload', 'warning');
+                    return;
+                }
+                const form = new FormData();
+                form.append('domains', fileInput.files[0]);
+                try {
+                    const response = await fetch('/api/scanner/upload-domains', {
+                        method: 'POST',
+                        body: form,
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        info.textContent = `Uploaded. ${data.total} domains ready.`;
+                        this.showToast('domains.txt uploaded successfully', 'success');
+                        this.loadDashboardData();
+                    } else {
+                        const err = await response.json().catch(()=>({}));
+                        this.showToast(err.error || 'Failed to upload domains.txt', 'error');
+                    }
+                } catch (e) {
+                    this.showToast('Upload failed', 'error');
                 }
             }
 

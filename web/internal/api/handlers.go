@@ -1,23 +1,24 @@
 package api
 
 import (
-	"fmt"
-	"html"
-	"log"
-	"net/http"
-	"net/url"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
+    "fmt"
+    "html"
+    "io"
+    "log"
+    "net/http"
+    "net/url"
+    "os"
+    "sort"
+    "strconv"
+    "strings"
 
-	"HiddenTrace/web/internal/auth"
-	"HiddenTrace/web/internal/database"
-	"HiddenTrace/web/internal/middleware"
-	"HiddenTrace/web/internal/scanner"
+    "HiddenTrace/web/internal/auth"
+    "HiddenTrace/web/internal/database"
+    "HiddenTrace/web/internal/middleware"
+    "HiddenTrace/web/internal/scanner"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+    "github.com/gin-gonic/gin"
+    "github.com/google/uuid"
 )
 
 type Handler struct {
@@ -1193,4 +1194,45 @@ func (h *Handler) GetDashboardStats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stats)
+}
+
+// UploadDomainsFile accepts a .txt file (multipart form field "domains") and writes it to domains.txt
+// Returns JSON with total_lines parsed (non-empty)
+func (h *Handler) UploadDomainsFile(c *gin.Context) {
+    file, err := c.FormFile("domains")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "missing domains file"})
+        return
+    }
+
+    f, err := file.Open()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open uploaded file"})
+        return
+    }
+    defer f.Close()
+
+    // Read content and count non-empty lines
+    buf := new(strings.Builder)
+    _, err = io.Copy(buf, f)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read uploaded file"})
+        return
+    }
+    content := buf.String()
+    lines := strings.Split(content, "\n")
+    total := 0
+    for _, ln := range lines {
+        if strings.TrimSpace(ln) != "" {
+            total++
+        }
+    }
+
+    // Write to domains.txt in working directory
+    if err := os.WriteFile("domains.txt", []byte(content), 0644); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save domains.txt"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"total": total})
 }
