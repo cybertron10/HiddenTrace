@@ -2643,6 +2643,23 @@ func (s *Service) GetDashboardStats(userID int) (*database.DashboardStats, error
 	}
 	stats.RecentScans = recentScans
 
+	// Compute YetToScan from domains.txt (non-empty lines) minus total scans
+	// If domains.txt is missing, default to 0
+	totalDomains := 0
+	if content, err := os.ReadFile("domains.txt"); err == nil {
+		lines := strings.Split(string(content), "\n")
+		for _, ln := range lines {
+			if strings.TrimSpace(ln) != "" {
+				totalDomains++
+			}
+		}
+	}
+	if totalDomains > stats.TotalScans {
+		stats.YetToScan = totalDomains - stats.TotalScans
+	} else {
+		stats.YetToScan = 0
+	}
+
     // Count vulnerabilities across ALL scans for this user by summing non-empty lines in xss.txt
     totalAxiom := 0
     rows, err := s.db.Query(`SELECT scan_uuid FROM scans WHERE user_id = ?`, userID)

@@ -66,8 +66,8 @@
                         <i class="fas fa-check-circle text-green-600 text-xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Completed</p>
-                        <p id="completedScans" class="text-2xl font-bold text-gray-900">0</p>
+                        <p class="text-sm font-medium text-gray-600">Yet To Scan</p>
+                        <p id="yetToScan" class="text-2xl font-bold text-gray-900">0</p>
                     </div>
                 </div>
             </div>
@@ -83,7 +83,6 @@
                     </div>
                 </div>
             </div>
-        </div>
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <div class="flex items-center">
                     <div class="p-2 bg-purple-100 rounded-lg">
@@ -95,6 +94,7 @@
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- Admin Panel -->
         <div id="adminPanel" class="bg-white rounded-lg shadow-lg mb-8 hidden">
@@ -421,7 +421,7 @@
                     if (response.ok) {
                         const stats = await response.json();
                         document.getElementById('totalScans').textContent = stats.total_scans;
-                        document.getElementById('completedScans').textContent = stats.completed_scans;
+                        document.getElementById('yetToScan').textContent = stats.yet_to_scan ?? 0;
                         document.getElementById('runningScans').textContent = stats.running_scans;
                         if (document.getElementById('axiomResults')) {
                             document.getElementById('axiomResults').textContent = stats.axiom_results ?? 0;
