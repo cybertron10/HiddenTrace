@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"HiddenTrace/web/internal/database"
+	"HiddenTrace/web/internal/api"
 	"HiddenTrace/internal/enhancedCrawler"
 	"HiddenTrace/internal/paramsmapper"
 	"HiddenTrace/internal/scanningData"
@@ -206,6 +208,77 @@ func (s *Service) runScan(scanID int, scanUUID string, req *ScanRequest) {
 	s.updateScanStatus(scanID, "completed", 100)
 
 	log.Printf("Scan %d completed successfully", scanID)
+
+	// After scan completes, automatically run parameter fuzzing then axiom scan
+	go s.autoFuzzAndAxiom(scanUUID)
+}
+
+// autoFuzzAndAxiom runs parameter fuzzing and then starts axiom-scan for a scan UUID
+func (s *Service) autoFuzzAndAxiom(scanUUID string) {
+    // Get user_id for the scan
+    var userID int
+    if err := s.db.QueryRow("SELECT user_id FROM scans WHERE scan_uuid = ?", scanUUID).Scan(&userID); err != nil {
+        log.Printf("autoFuzzAndAxiom: failed to get user_id for %s: %v", scanUUID, err)
+        return
+    }
+
+    // Run parameter fuzzing (chunk size 500)
+    s.RunParameterFuzzing(scanUUID, userID, 500)
+
+    // Then run axiom scan
+    scanDir := filepath.Join("data", "scans", scanUUID)
+    allurlsFile := filepath.Join(scanDir, "allurls.txt")
+    statusFile := filepath.Join(scanDir, "axiom_scan_status.json")
+    logFile := filepath.Join(scanDir, "axiom_scan.log")
+
+    type axStatus struct {
+        ScanUUID  string    `json:"scan_uuid"`
+        Status    string    `json:"status"`
+        Progress  int       `json:"progress"`
+        Message   string    `json:"message"`
+        StartTime time.Time `json:"start_time"`
+        EndTime   *time.Time `json:"end_time,omitempty"`
+        Error     string    `json:"error,omitempty"`
+    }
+
+    save := func(st axStatus) {
+        data, _ := json.MarshalIndent(st, "", "  ")
+        _ = os.WriteFile(statusFile, data, 0644)
+    }
+
+    st := axStatus{ScanUUID: scanUUID, Status: "scanning", Progress: 0, Message: "Preparing Axiom scan...", StartTime: time.Now()}
+    save(st)
+
+    if _, err := os.Stat(allurlsFile); err != nil {
+        st.Status = "error"
+        st.Error = "allurls.txt not found."
+        now := time.Now(); st.EndTime = &now
+        save(st)
+        return
+    }
+
+    st.Progress = 10
+    st.Message = "Starting Axiom scan..."
+    save(st)
+
+    cmd := exec.Command("bash", "-lc", "axiom-scan allurls.txt -m xss-scan -o xss.txt")
+    cmd.Dir = scanDir
+    cmd.Env = os.Environ()
+    out, err := cmd.CombinedOutput()
+    _ = os.WriteFile(logFile, out, 0644)
+    if err != nil {
+        st.Status = "error"
+        st.Error = "Axiom scan execution failed. See axiom_scan.log"
+        now := time.Now(); st.EndTime = &now
+        save(st)
+        return
+    }
+
+    st.Progress = 100
+    st.Status = "completed"
+    st.Message = "Axiom scan completed successfully"
+    now := time.Now(); st.EndTime = &now
+    save(st)
 }
 
 // saveScanResults saves discovered endpoints to database
