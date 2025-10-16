@@ -2643,7 +2643,25 @@ func (s *Service) GetDashboardStats(userID int) (*database.DashboardStats, error
 	}
 	stats.RecentScans = recentScans
 
-	return stats, nil
+    // Count axiom results from stored files (xss.txt) across user's scans
+    // If your DB stores axiom findings elsewhere, adapt this to a DB query.
+    totalAxiom := 0
+    for _, sc := range recentScans {
+        scanDir := filepath.Join("data", "scans", sc.ScanUUID)
+        xssFile := filepath.Join(scanDir, "xss.txt")
+        if content, err := os.ReadFile(xssFile); err == nil {
+            // count non-empty lines
+            lines := strings.Split(string(content), "\n")
+            for _, ln := range lines {
+                if strings.TrimSpace(ln) != "" {
+                    totalAxiom++
+                }
+            }
+        }
+    }
+    stats.AxiomResults = totalAxiom
+
+    return stats, nil
 }
 
 // RescanScan restarts a scan with new parameters, updating the existing scan

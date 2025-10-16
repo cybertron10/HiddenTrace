@@ -104,5 +104,6 @@ type DashboardStats struct {
 	CompletedScans  int `json:"completed_scans"`
 	RunningScans    int `json:"running_scans"`
 	TotalEndpoints  int `json:"total_endpoints"`
+    AxiomResults    int `json:"axiom_results"`
 	RecentScans     []Scan `json:"recent_scans"`
 }
