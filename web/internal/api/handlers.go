@@ -3,11 +3,9 @@ package api
 import (
     "fmt"
     "html"
-    "io"
     "log"
     "net/http"
     "net/url"
-    "os"
     "regexp"
     "sort"
     "strconv"
