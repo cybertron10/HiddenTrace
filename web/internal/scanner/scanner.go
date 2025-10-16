@@ -2643,18 +2643,22 @@ func (s *Service) GetDashboardStats(userID int) (*database.DashboardStats, error
 	}
 	stats.RecentScans = recentScans
 
-    // Count axiom results from stored files (xss.txt) across user's scans
-    // If your DB stores axiom findings elsewhere, adapt this to a DB query.
+    // Count vulnerabilities across ALL scans for this user by summing non-empty lines in xss.txt
     totalAxiom := 0
-    for _, sc := range recentScans {
-        scanDir := filepath.Join("data", "scans", sc.ScanUUID)
-        xssFile := filepath.Join(scanDir, "xss.txt")
-        if content, err := os.ReadFile(xssFile); err == nil {
-            // count non-empty lines
-            lines := strings.Split(string(content), "\n")
-            for _, ln := range lines {
-                if strings.TrimSpace(ln) != "" {
-                    totalAxiom++
+    rows, err := s.db.Query(`SELECT scan_uuid FROM scans WHERE user_id = ?`, userID)
+    if err == nil {
+        defer rows.Close()
+        for rows.Next() {
+            var uuid string
+            if err := rows.Scan(&uuid); err != nil { continue }
+            scanDir := filepath.Join("data", "scans", uuid)
+            xssFile := filepath.Join(scanDir, "xss.txt")
+            if content, err := os.ReadFile(xssFile); err == nil {
+                lines := strings.Split(string(content), "\n")
+                for _, ln := range lines {
+                    if strings.TrimSpace(ln) != "" {
+                        totalAxiom++
+                    }
                 }
             }
         }
